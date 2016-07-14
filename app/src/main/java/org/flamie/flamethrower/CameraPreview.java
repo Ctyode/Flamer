@@ -1,4 +1,4 @@
-package org.flamie.flamer;
+package org.flamie.flamethrower;
 
 import android.app.Activity;
 import android.content.Context;
@@ -10,21 +10,30 @@ import android.view.Display;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.widget.FrameLayout;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Observer;
 
 public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
 
     private SurfaceHolder mHolder;
     private Camera mCamera;
     private Activity activity;
+    private CameraListener cameraListener;
 
     private static final String TAG = "CameraPreview";
-    private static final int CAMERA_ID = 0;
+//    private static final int CAMERA_ID = 0;
+    private int cameraId;
 
+    public interface CameraListener {
+        void onCamera(Camera camera);
+    }
 
-    public CameraPreview(Context context, Camera camera, Activity activity) {
+    public CameraPreview(Context context, Camera camera, Activity activity, CameraListener cameraListener) {
         super(context);
+        this.cameraListener = cameraListener;
         this.activity = activity;
         mCamera = camera;
         mHolder = getHolder();
@@ -34,9 +43,11 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
     public void surfaceCreated(SurfaceHolder holder) {
         try {
+            mHolder.removeCallback(this);
             mCamera.setPreviewDisplay(holder);
             mCamera.startPreview();
-            setCameraDisplayOrientation(CAMERA_ID, mCamera);
+            MainActivity.safeToTakePicture = true;
+            setCameraDisplayOrientation(cameraId, mCamera);
             setPreviewSize(true);
         } catch (IOException e) {
             Log.d(TAG, "Error setting camera preview: " + e.getMessage());
@@ -50,7 +61,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     }
 
     public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
-        if (mHolder.getSurface() == null){
+        if (mHolder.getSurface() == null) {
             return;
         }
         try {
@@ -66,11 +77,10 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         }
     }
 
-    public void setCameraDisplayOrientation(int cameraId, android.hardware.Camera camera) {
-        android.hardware.Camera.CameraInfo info = new android.hardware.Camera.CameraInfo();
-        android.hardware.Camera.getCameraInfo(cameraId, info);
-        int rotation = activity.getWindowManager().getDefaultDisplay()
-                .getRotation();
+    public void setCameraDisplayOrientation(int cameraId, Camera camera) {
+        Camera.CameraInfo info = new Camera.CameraInfo();
+        Camera.getCameraInfo(cameraId, info);
+        int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
         int degrees = 0;
         switch (rotation) {
             case Surface.ROTATION_0: degrees = 0; break;
@@ -89,7 +99,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         camera.setDisplayOrientation(result);
     }
 
-    public void setPreviewSize(boolean fullScreen) {
+    public void setPreviewSize(boolean fullscreen) {
         Display display = activity.getWindowManager().getDefaultDisplay();
         boolean widthIsMax = display.getWidth() > display.getHeight();
         Camera.Size size = mCamera.getParameters().getPreviewSize();
@@ -105,7 +115,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         }
 
         Matrix matrix = new Matrix();
-        if (!fullScreen) {
+        if (!fullscreen) {
             matrix.setRectToRect(rectPreview, rectDisplay, Matrix.ScaleToFit.START);
         } else {
             matrix.setRectToRect(rectDisplay, rectPreview, Matrix.ScaleToFit.START);
@@ -115,6 +125,31 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
         getLayoutParams().height = (int) (rectPreview.bottom);
         getLayoutParams().width = (int) (rectPreview.right);
+    }
+
+    public void switchCamera() {
+        if (mCamera != null) {
+            mCamera.stopPreview();
+            mHolder.removeCallback(this);
+            mCamera.setPreviewCallback(null);
+            mCamera.release();
+            mCamera = null;
+        }
+        if (cameraId == Camera.CameraInfo.CAMERA_FACING_BACK) {
+            cameraId = Camera.CameraInfo.CAMERA_FACING_FRONT;
+        } else {
+            cameraId = Camera.CameraInfo.CAMERA_FACING_BACK;
+        }
+        try {
+            mCamera = Camera.open(cameraId);
+            cameraListener.onCamera(mCamera);
+            mCamera.setPreviewDisplay(mHolder);
+            mCamera.startPreview();
+            setCameraDisplayOrientation(cameraId, mCamera);
+//            setPreviewSize(true);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }

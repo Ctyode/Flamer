@@ -1,5 +1,6 @@
-package org.flamie.flamer;
+package org.flamie.flamethrower;
 
+import android.hardware.Camera;
 import android.os.Environment;
 import android.util.Log;
 
@@ -14,7 +15,7 @@ public class ImageSave {
     public static final String TAG = "ImageSave";
 
     public static File getOutputMediaFile(int type) {
-        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "Flamer");
+        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "Flamethrower");
         if (!mediaStorageDir.exists()) {
             if (!mediaStorageDir.mkdirs()) {
                 Log.d(TAG, "Oops! Failed create directory");

@@ -1,9 +1,9 @@
-package org.flamie.flamer;
+package org.flamie.flamethrower;
 
 import android.app.Application;
 import android.content.Context;
 
-public class Flamer extends Application {
+public class Flamethrower extends Application {
 
     private static Context context;
 

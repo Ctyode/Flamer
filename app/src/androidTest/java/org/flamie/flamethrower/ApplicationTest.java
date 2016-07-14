@@ -1,4 +1,4 @@
-package org.flamie.flamer;
+package org.flamie.flamethrower;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;
