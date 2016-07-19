@@ -1,6 +1,5 @@
-package org.flamie.flamethrower;
+package org.flamie.flamethrower.util;
 
-import android.hardware.Camera;
 import android.os.Environment;
 import android.util.Log;
 
@@ -11,7 +10,6 @@ import java.util.Date;
 public class ImageSave {
 
     public static final int MEDIA_TYPE_IMAGE = 1;
-
     public static final String TAG = "ImageSave";
 
     public static File getOutputMediaFile(int type) {
@@ -26,7 +24,7 @@ public class ImageSave {
         File mediaFile;
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         if (type == MEDIA_TYPE_IMAGE){
-            mediaFile = new File(mediaStorageDir.getPath() + File.separator + "Jackal_"+ timeStamp + ".jpg");
+            mediaFile = new File(mediaStorageDir.getPath() + File.separator + "Flame_"+ timeStamp + ".jpg");
         } else {
             return null;
         }

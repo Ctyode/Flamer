@@ -1,14 +1,16 @@
-package org.flamie.flamethrower;
+package org.flamie.flamethrower.callback;
 
 import android.hardware.Camera;
 import android.util.Log;
+
+import org.flamie.flamethrower.ui.MainObjects;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import static org.flamie.flamethrower.ImageSave.getOutputMediaFile;
+import static org.flamie.flamethrower.util.ImageSave.getOutputMediaFile;
 
 public class PictureCallback implements Camera.PictureCallback {
 
@@ -20,7 +22,7 @@ public class PictureCallback implements Camera.PictureCallback {
         File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
         camera.startPreview();
         if (pictureFile == null) {
-            MainActivity.safeToTakePicture = true;
+            MainObjects.safeToTakePicture = true;
             Log.d(TAG, "Error creating media file, check storage permissions: ");
             return;
         }
@@ -34,7 +36,7 @@ public class PictureCallback implements Camera.PictureCallback {
         } catch (IOException e) {
             Log.d(TAG, "Error accessing file: " + e.getMessage());
         }
-        MainActivity.safeToTakePicture = true;
+        MainObjects.safeToTakePicture = true;
     }
 
 }
