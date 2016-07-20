@@ -17,8 +17,18 @@ public class PictureCallback implements Camera.PictureCallback {
     private static final String TAG = "PictureCallback";
     private static final int MEDIA_TYPE_IMAGE = 1;
 
+    private MainObjects mainObjects;
+
+    public PictureCallback(MainObjects mainObjects) {
+        this.mainObjects = mainObjects;
+    }
+
     @Override
     public void onPictureTaken(byte[] data, Camera camera) {
+        mainObjects.photoPreview(data);
+    }
+
+    public void saveImage(byte[] data, Camera camera) {
         File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
         camera.startPreview();
         if (pictureFile == null) {
@@ -38,5 +48,6 @@ public class PictureCallback implements Camera.PictureCallback {
         }
         MainObjects.safeToTakePicture = true;
     }
+
 
 }

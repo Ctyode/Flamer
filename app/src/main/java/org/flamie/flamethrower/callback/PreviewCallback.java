@@ -14,6 +14,8 @@ import java.io.IOException;
 
 public class PreviewCallback extends SurfaceView implements SurfaceHolder.Callback {
 
+    // TODO: пофиксить нуллпоинтер при горизонтальной ориентации
+
     private SurfaceHolder mHolder;
     private Camera mCamera;
     private CameraListener cameraListener;
@@ -44,7 +46,8 @@ public class PreviewCallback extends SurfaceView implements SurfaceHolder.Callba
             mCamera.setPreviewDisplay(holder);
             mCamera.startPreview();
             MainObjects.safeToTakePicture = true;
-            previewUtils.setCameraDisplayOrientation(cameraId, mCamera);
+//            previewUtils.setCameraDisplayOrientation(cameraId, mCamera);
+            mCamera.setDisplayOrientation(previewUtils.cameraRotation(cameraId));
             previewUtils.setPreviewSize(true, this, mCamera);
         } catch (IOException e) {
             Log.d(TAG, "Error setting camera preview: " + e.getMessage());
@@ -92,10 +95,13 @@ public class PreviewCallback extends SurfaceView implements SurfaceHolder.Callba
             cameraListener.onCamera(mCamera);
             mCamera.setPreviewDisplay(mHolder);
             mCamera.startPreview();
-            previewUtils.setCameraDisplayOrientation(cameraId, mCamera);
+            mCamera.setDisplayOrientation(previewUtils.cameraRotation(cameraId));
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    public int getCameraId() {
+        return cameraId;
+    }
 }

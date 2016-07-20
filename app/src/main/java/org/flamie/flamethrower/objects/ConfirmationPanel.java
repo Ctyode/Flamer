@@ -7,12 +7,12 @@ import android.graphics.Paint;
 import android.graphics.RectF;
 import android.view.View;
 
-public class BottomPanel extends View {
+public class ConfirmationPanel extends View {
 
     private Paint panelBackgroundPaint;
     private RectF panelBackground;
 
-    public BottomPanel(Context context) {
+    public ConfirmationPanel(Context context) {
         super(context);
         panelBackgroundPaint = new Paint();
         panelBackgroundPaint.setAntiAlias(true);

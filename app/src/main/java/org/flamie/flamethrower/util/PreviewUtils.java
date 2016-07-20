@@ -17,7 +17,7 @@ public class PreviewUtils {
         this.activity = activity;
     }
 
-    public void setCameraDisplayOrientation(int cameraId, Camera camera) {
+    public int cameraRotation(int cameraId) {
         Camera.CameraInfo info = new Camera.CameraInfo();
         Camera.getCameraInfo(cameraId, info);
         int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
@@ -36,7 +36,7 @@ public class PreviewUtils {
         } else {
             result = (info.orientation - degrees + 360) % 360;
         }
-        camera.setDisplayOrientation(result);
+        return result;
     }
 
     public void setPreviewSize(boolean fullscreen, PreviewCallback previewCallback, Camera camera) {
