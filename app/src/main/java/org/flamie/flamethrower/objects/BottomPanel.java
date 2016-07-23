@@ -8,6 +8,7 @@ import android.graphics.RectF;
 import android.view.View;
 
 import com.facebook.rebound.Spring;
+import com.facebook.rebound.SpringConfig;
 import com.facebook.rebound.SpringListener;
 import com.facebook.rebound.SpringSystem;
 
@@ -28,10 +29,11 @@ public class BottomPanel extends View implements SpringListener {
         panelBackgroundPaint = new Paint();
         panelBackgroundPaint.setAntiAlias(true);
         panelBackgroundPaint.setStyle(Paint.Style.FILL);
+        panelBackgroundPaint.setColor(Color.argb(255, 37, 39, 42));
 
         panelBackground = new RectF();
+        mSpringOpacity.setSpringConfig(new SpringConfig(24, 12));
         mSpringOpacity.setCurrentValue(255);
-        panelBackgroundPaint.setColor(Color.argb(255, 37, 39, 42));
     }
 
     @Override

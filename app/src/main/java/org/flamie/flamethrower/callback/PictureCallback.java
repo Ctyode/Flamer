@@ -16,7 +16,6 @@ public class PictureCallback implements Camera.PictureCallback {
 
     private static final String TAG = "PictureCallback";
     private static final int MEDIA_TYPE_IMAGE = 1;
-    public static final int MEDIA_TYPE_VIDEO = 2;
 
     private MainObjects mainObjects;
 

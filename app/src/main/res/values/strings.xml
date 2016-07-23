@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Flamethrower</string>
+    <string name="requires_camera_permission">To use this app, please allow an access to camera and microphone in settings.</string>
+    <string name="requires_storage_permission">To save this photo, please allow an access to storage in settings.</string>
+    <string name="cam_permission_request">This app are really need an access to camera. It\'s a camera app!</string>
+    <string name="mic_permission_request">This app are really need an access to microphone, so it will be able to record a video.</string>
+    <string name="storage_permission_request">To save photos and videos, please allow an access to storage in settings.</string>
 </resources>

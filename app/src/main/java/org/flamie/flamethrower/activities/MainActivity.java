@@ -1,7 +1,7 @@
 package org.flamie.flamethrower.activities;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 
 import org.flamie.flamethrower.ui.MainObjects;
 import org.flamie.flamethrower.util.DimenUtils;

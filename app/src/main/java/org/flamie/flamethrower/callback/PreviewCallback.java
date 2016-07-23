@@ -38,17 +38,19 @@ public class PreviewCallback extends SurfaceView implements SurfaceHolder.Callba
         mHolder.addCallback(this);
         mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         previewUtils = new PreviewUtils(activity);
+
     }
 
     public void surfaceCreated(SurfaceHolder holder) {
         try {
             mHolder.removeCallback(this);
-            mCamera.setPreviewDisplay(holder);
-            mCamera.startPreview();
-            MainObjects.safeToTakePicture = true;
-//            previewUtils.setCameraDisplayOrientation(cameraId, mCamera);
-            mCamera.setDisplayOrientation(previewUtils.cameraRotation(cameraId));
-            previewUtils.setPreviewSize(true, this, mCamera);
+            if(mCamera != null) {
+                mCamera.setPreviewDisplay(holder);
+                mCamera.startPreview();
+                MainObjects.safeToTakePicture = true;
+                mCamera.setDisplayOrientation(previewUtils.cameraRotation(cameraId));
+                previewUtils.setPreviewSize(true, this, mCamera);
+            }
         } catch (IOException e) {
             Log.d(TAG, "Error setting camera preview: " + e.getMessage());
         }

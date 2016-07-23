@@ -25,12 +25,13 @@ import org.flamie.flamethrower.objects.buttons.ButtonDecline;
 import org.flamie.flamethrower.util.ImageSave;
 import org.flamie.flamethrower.util.PreviewUtils;
 
-import java.io.File;
 import java.io.IOException;
 
 import static org.flamie.flamethrower.util.DimenUtils.dp;
 
 public class MainObjects extends RelativeLayout implements PreviewCallback.CameraListener {
+
+    // TODO: исправить дерьмовую архитектуру, утечки памяти, убиться и не кодить никогда больше
 
     private static final String TAG = "MainObjects";
     public static boolean safeToTakePicture = false;
@@ -42,7 +43,6 @@ public class MainObjects extends RelativeLayout implements PreviewCallback.Camer
     private Camera mCamera;
     private PreviewUtils previewUtils;
     private MediaRecorder mediaRecorder;
-    private File videoFile;
 
     private BottomPanel confirmationPanel;
     private ImageView photoPreview;
@@ -50,6 +50,8 @@ public class MainObjects extends RelativeLayout implements PreviewCallback.Camer
     private ButtonDecline buttonDecline;
     private boolean isRecord = false;
     private boolean videoMode = false;
+    private boolean isFront = false;
+    private Bitmap bitmap;
 
     public MainObjects(Context context, Activity activity) {
         super(context);
@@ -71,7 +73,7 @@ public class MainObjects extends RelativeLayout implements PreviewCallback.Camer
 
         final BottomPanel bottomPanel = new BottomPanel(getContext());
         final ButtonCapture buttonCapture = new ButtonCapture(getContext());
-        ButtonChange buttonChange = new ButtonChange(getContext());
+        final ButtonChange buttonChange = new ButtonChange(getContext());
 
         confirmationPanel.setVisibility(INVISIBLE);
         photoPreview.setVisibility(INVISIBLE);
@@ -89,7 +91,7 @@ public class MainObjects extends RelativeLayout implements PreviewCallback.Camer
         buttonChangeParams.addRule(ALIGN_PARENT_BOTTOM);
         buttonChangeParams.addRule(ALIGN_PARENT_LEFT);
         buttonChangeParams.bottomMargin = dp(30);
-        buttonChangeParams.leftMargin = dp(30);
+        buttonChangeParams.leftMargin = dp(35);
 
         captureButtonParams.addRule(ALIGN_PARENT_BOTTOM);
         captureButtonParams.addRule(CENTER_HORIZONTAL);
@@ -116,6 +118,17 @@ public class MainObjects extends RelativeLayout implements PreviewCallback.Camer
         buttonChange.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if(isFront) {
+                    buttonChange.getSpringStroke().setEndValue(dp(2));
+                    buttonChange.getSpringRotate().setEndValue(180);
+                    buttonChange.getSpringRadius().setEndValue(dp(7));
+                    isFront = false;
+                } else {
+                    buttonChange.getSpringStroke().setEndValue(dp(9));
+                    buttonChange.getSpringRotate().setEndValue(0);
+                    buttonChange.getSpringRadius().setEndValue(dp(3));
+                    isFront = true;
+                }
                 mPreview.switchCamera();
             }
          });
@@ -141,13 +154,15 @@ public class MainObjects extends RelativeLayout implements PreviewCallback.Camer
                 photoPreview.setVisibility(INVISIBLE);
                 buttonAccept.setVisibility(INVISIBLE);
                 buttonDecline.setVisibility(INVISIBLE);
+                bitmap.recycle();
                 safeToTakePicture = true;
+
             }
         });
 
         mPreview.setOnTouchListener(new OnSwipeTouchListener(activity) {
             public void onSwipeLeft() {
-                bottomPanel.getSpringOpacity().setEndValue(150);
+                bottomPanel.getSpringOpacity().setEndValue(110);
                 buttonCapture.getSpringOuter().setEndValue(130f);
                 buttonCapture.getSpringInner().setEndValue(0f);
                 buttonCapture.getSpringCentral().setEndValue(0f);
@@ -199,7 +214,8 @@ public class MainObjects extends RelativeLayout implements PreviewCallback.Camer
 
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = false;
-        Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length, options);
+        bitmap = BitmapFactory.decodeByteArray(data, 0, data.length, options);
+
         bitmap = rotateImage(bitmap, previewUtils.cameraRotation(mPreview.getCameraId()));
 
         photoPreview.setImageBitmap(bitmap);
