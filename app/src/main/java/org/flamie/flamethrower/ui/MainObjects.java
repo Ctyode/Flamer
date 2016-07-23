@@ -11,11 +11,10 @@ import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
+import org.flamie.flamethrower.OnSwipeTouchListener;
 import org.flamie.flamethrower.callback.PictureCallback;
 import org.flamie.flamethrower.callback.PreviewCallback;
 import org.flamie.flamethrower.objects.BottomPanel;
@@ -28,6 +27,8 @@ import org.flamie.flamethrower.util.PreviewUtils;
 
 import java.io.File;
 import java.io.IOException;
+
+import static org.flamie.flamethrower.util.DimenUtils.dp;
 
 public class MainObjects extends RelativeLayout implements PreviewCallback.CameraListener {
 
@@ -48,6 +49,7 @@ public class MainObjects extends RelativeLayout implements PreviewCallback.Camer
     private ButtonAccept buttonAccept;
     private ButtonDecline buttonDecline;
     private boolean isRecord = false;
+    private boolean videoMode = false;
 
     public MainObjects(Context context, Activity activity) {
         super(context);
@@ -61,16 +63,14 @@ public class MainObjects extends RelativeLayout implements PreviewCallback.Camer
     }
 
     private void init() {
-        Button videoButton = new Button(getContext());
-
         confirmationPanel = new BottomPanel(getContext());
         photoPreview = new ImageView(getContext());
         photoPreview.setBackgroundColor(Color.rgb(0, 0, 0));
         buttonAccept = new ButtonAccept(getContext());
         buttonDecline = new ButtonDecline(getContext());
 
-        BottomPanel bottomPanel = new BottomPanel(getContext());
-        ButtonCapture buttonCapture = new ButtonCapture(getContext());
+        final BottomPanel bottomPanel = new BottomPanel(getContext());
+        final ButtonCapture buttonCapture = new ButtonCapture(getContext());
         ButtonChange buttonChange = new ButtonChange(getContext());
 
         confirmationPanel.setVisibility(INVISIBLE);
@@ -86,27 +86,32 @@ public class MainObjects extends RelativeLayout implements PreviewCallback.Camer
 
         photoPreviewParams.addRule(RelativeLayout.ALIGN_PARENT_TOP);
         photoPreview.setScaleType(ImageView.ScaleType.FIT_START);
+        buttonChangeParams.addRule(ALIGN_PARENT_BOTTOM);
+        buttonChangeParams.addRule(ALIGN_PARENT_LEFT);
+        buttonChangeParams.bottomMargin = dp(30);
+        buttonChangeParams.leftMargin = dp(30);
 
-        videoButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(isRecord) {
-                    onClickStopRecord();
-                } else {
-                    onClickStartRecord();
-                }
-            }
-        });
+        captureButtonParams.addRule(ALIGN_PARENT_BOTTOM);
+        captureButtonParams.addRule(CENTER_HORIZONTAL);
+        captureButtonParams.bottomMargin = dp(15);
 
         buttonCapture.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (safeToTakePicture) {
-                    mCamera.takePicture(null, null, mPicture);
-                    safeToTakePicture = false;
+                if(videoMode) {
+                    if(isRecord) {
+                        onClickStopRecord();
+                    } else {
+                        onClickStartRecord();
+                    }
+                } else {
+                    if (safeToTakePicture) {
+                        mCamera.takePicture(null, null, mPicture);
+                        safeToTakePicture = false;
+                    }
                 }
             }
-        });
+         });
 
         buttonChange.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -140,6 +145,27 @@ public class MainObjects extends RelativeLayout implements PreviewCallback.Camer
             }
         });
 
+        mPreview.setOnTouchListener(new OnSwipeTouchListener(activity) {
+            public void onSwipeLeft() {
+                bottomPanel.getSpringOpacity().setEndValue(150);
+                buttonCapture.getSpringOuter().setEndValue(130f);
+                buttonCapture.getSpringInner().setEndValue(0f);
+                buttonCapture.getSpringCentral().setEndValue(0f);
+                buttonCapture.getSpringRecord().setEndValue(20f);
+                videoMode = true;
+            }
+
+            public void onSwipeRight() {
+                bottomPanel.getSpringOpacity().setEndValue(255);
+                buttonCapture.getSpringOuter().setEndValue(100f);
+                buttonCapture.getSpringInner().setEndValue(90f);
+                buttonCapture.getSpringCentral().setEndValue(60f);
+                buttonCapture.getSpringRecord().setEndValue(0f);
+                videoMode = false;
+            }
+        });
+
+
         photoPreview.setLayoutParams(photoPreviewParams);
         buttonCapture.setLayoutParams(captureButtonParams);
         bottomPanel.setLayoutParams(bottomPanelParams);
@@ -155,8 +181,6 @@ public class MainObjects extends RelativeLayout implements PreviewCallback.Camer
         addView(confirmationPanel);
         addView(buttonAccept);
         addView(buttonDecline);
-
-        addView(videoButton);
     }
 
     public synchronized Camera getCameraInstance() {

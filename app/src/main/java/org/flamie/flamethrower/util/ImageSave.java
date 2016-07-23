@@ -10,6 +10,7 @@ import java.util.Date;
 public class ImageSave {
 
     public static final int MEDIA_TYPE_IMAGE = 1;
+    public static final int MEDIA_TYPE_VIDEO = 2;
     public static final String TAG = "ImageSave";
 
     public static File getOutputMediaFile(int type) {
@@ -24,7 +25,10 @@ public class ImageSave {
         File mediaFile;
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         if (type == MEDIA_TYPE_IMAGE){
-            mediaFile = new File(mediaStorageDir.getPath() + File.separator + "Flame_"+ timeStamp + ".jpg");
+            mediaFile = new File(mediaStorageDir.getPath() + File.separator + "FlamePhoto_"+ timeStamp + ".jpg");
+        } else if(type == MEDIA_TYPE_VIDEO) {
+            mediaFile = new File(mediaStorageDir.getPath() + File.separator +
+                    "FlameVideo_"+ timeStamp + ".mp4");
         } else {
             return null;
         }

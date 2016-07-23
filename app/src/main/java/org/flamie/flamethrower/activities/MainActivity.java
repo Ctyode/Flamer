@@ -4,6 +4,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
 import org.flamie.flamethrower.ui.MainObjects;
+import org.flamie.flamethrower.util.DimenUtils;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -12,6 +13,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        DimenUtils.init(getApplicationContext());
         setContentView(new MainObjects(getApplicationContext(), this));
         if(getSupportActionBar() != null) {
             getSupportActionBar().hide();

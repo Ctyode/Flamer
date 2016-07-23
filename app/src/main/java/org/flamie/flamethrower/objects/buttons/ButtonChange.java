@@ -14,8 +14,6 @@ public class ButtonChange extends View {
 
     private Drawable switchDrawable;
     private Paint circlePaint;
-    private int switchIconX = 125;
-    private int switchIconY = 1500;
 
     public ButtonChange(Context context) {
         super(context);
@@ -25,20 +23,18 @@ public class ButtonChange extends View {
         circlePaint.setColor(Color.WHITE);
 
         switchDrawable = ContextCompat.getDrawable(getContext(), R.drawable.switcher);
-        switchDrawable.setBounds(switchIconX, switchIconY, switchIconX + switchDrawable.getIntrinsicWidth(),
-                                                           switchIconY + switchDrawable.getIntrinsicHeight());
+        switchDrawable.setBounds(0, 0, switchDrawable.getIntrinsicWidth(), switchDrawable.getIntrinsicHeight());
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         switchDrawable.draw(canvas);
-        canvas.drawCircle(getWidth() / 2 + 63f, 1558f, 20f, circlePaint);
     }
 
     @Override
     public void onMeasure(int measureWidthSpec, int measureHeightSpec) {
         if(switchDrawable != null)
-            setMeasuredDimension(switchIconX + switchDrawable.getIntrinsicWidth(), switchIconY + switchDrawable.getIntrinsicHeight());
+            setMeasuredDimension(switchDrawable.getIntrinsicWidth(), switchDrawable.getIntrinsicHeight());
     }
 
 }
