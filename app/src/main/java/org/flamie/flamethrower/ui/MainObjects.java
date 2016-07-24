@@ -22,6 +22,8 @@ import org.flamie.flamethrower.objects.buttons.ButtonAccept;
 import org.flamie.flamethrower.objects.buttons.ButtonCapture;
 import org.flamie.flamethrower.objects.buttons.ButtonChange;
 import org.flamie.flamethrower.objects.buttons.ButtonDecline;
+import org.flamie.flamethrower.objects.buttons.FlashButtonAuto;
+import org.flamie.flamethrower.objects.buttons.FlashButtonOn;
 import org.flamie.flamethrower.util.ImageSave;
 import org.flamie.flamethrower.util.PreviewUtils;
 
@@ -44,6 +46,8 @@ public class MainObjects extends RelativeLayout implements PreviewCallback.Camer
     private PreviewUtils previewUtils;
     private MediaRecorder mediaRecorder;
 
+    private FlashButtonAuto flashButtonAuto;
+    private FlashButtonOn flashButtonOn;
     private BottomPanel confirmationPanel;
     private ImageView photoPreview;
     private ButtonAccept buttonAccept;
@@ -65,6 +69,8 @@ public class MainObjects extends RelativeLayout implements PreviewCallback.Camer
     }
 
     private void init() {
+        flashButtonAuto = new FlashButtonAuto(getContext());
+        flashButtonOn = new FlashButtonOn(getContext());
         confirmationPanel = new BottomPanel(getContext());
         photoPreview = new ImageView(getContext());
         photoPreview.setBackgroundColor(Color.rgb(0, 0, 0));
@@ -80,13 +86,25 @@ public class MainObjects extends RelativeLayout implements PreviewCallback.Camer
         buttonAccept.setVisibility(INVISIBLE);
         buttonDecline.setVisibility(INVISIBLE);
 
+        LayoutParams flashAutoLayoutParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        LayoutParams flashOnLayoutParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         LayoutParams photoPreviewParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
         LayoutParams captureButtonParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         LayoutParams buttonChangeParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         LayoutParams bottomPanelParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         LayoutParams previewParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
 
-        photoPreviewParams.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+        flashAutoLayoutParams.addRule(ALIGN_PARENT_RIGHT);
+        flashAutoLayoutParams.addRule(ALIGN_PARENT_TOP);
+        flashAutoLayoutParams.topMargin = dp(10);
+        flashAutoLayoutParams.rightMargin = dp(10);
+
+        flashOnLayoutParams.addRule(ALIGN_PARENT_RIGHT);
+        flashOnLayoutParams.addRule(ALIGN_PARENT_TOP);
+        flashOnLayoutParams.topMargin = dp(10);
+        flashOnLayoutParams.rightMargin = dp(10);
+
+        photoPreviewParams.addRule(ALIGN_PARENT_TOP);
         photoPreview.setScaleType(ImageView.ScaleType.FIT_START);
         buttonChangeParams.addRule(ALIGN_PARENT_BOTTOM);
         buttonChangeParams.addRule(ALIGN_PARENT_LEFT);
@@ -96,6 +114,16 @@ public class MainObjects extends RelativeLayout implements PreviewCallback.Camer
         captureButtonParams.addRule(ALIGN_PARENT_BOTTOM);
         captureButtonParams.addRule(CENTER_HORIZONTAL);
         captureButtonParams.bottomMargin = dp(15);
+
+        flashButtonAuto.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                flashButtonAuto.getSpringOpacity().setEndValue(0);
+                flashButtonAuto.getSpringFlashAuto().setEndValue(100);
+                flashButtonOn.getSpringFlashOn().setEndValue(0);
+                flashButtonOn.getSpringOpacity().setEndValue(255);
+            }
+        });
 
         buttonCapture.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -181,6 +209,8 @@ public class MainObjects extends RelativeLayout implements PreviewCallback.Camer
         });
 
 
+        flashButtonAuto.setLayoutParams(flashAutoLayoutParams);
+        flashButtonOn.setLayoutParams(flashOnLayoutParams);
         photoPreview.setLayoutParams(photoPreviewParams);
         buttonCapture.setLayoutParams(captureButtonParams);
         bottomPanel.setLayoutParams(bottomPanelParams);
@@ -191,6 +221,8 @@ public class MainObjects extends RelativeLayout implements PreviewCallback.Camer
         addView(bottomPanel);
         addView(buttonCapture);
         addView(buttonChange);
+        addView(flashButtonAuto);
+        addView(flashButtonOn);
 
         addView(photoPreview);
         addView(confirmationPanel);
