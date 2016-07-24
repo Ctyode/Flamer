@@ -1,4 +1,4 @@
-package org.flamie.flamethrower.objects.buttons;
+package org.flamie.flamethrower.ui.objects.buttons;
 
 import android.content.Context;
 import android.graphics.Canvas;

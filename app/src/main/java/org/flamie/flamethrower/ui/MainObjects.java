@@ -14,24 +14,24 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
+import org.flamie.flamethrower.CameraController;
 import org.flamie.flamethrower.OnSwipeTouchListener;
-import org.flamie.flamethrower.callback.PictureCallback;
-import org.flamie.flamethrower.callback.PreviewCallback;
-import org.flamie.flamethrower.objects.BottomPanel;
-import org.flamie.flamethrower.objects.buttons.ButtonAccept;
-import org.flamie.flamethrower.objects.buttons.ButtonCapture;
-import org.flamie.flamethrower.objects.buttons.ButtonChange;
-import org.flamie.flamethrower.objects.buttons.ButtonDecline;
-import org.flamie.flamethrower.objects.buttons.FlashButtonAuto;
-import org.flamie.flamethrower.objects.buttons.FlashButtonOn;
-import org.flamie.flamethrower.util.ImageSave;
+import org.flamie.flamethrower.ui.objects.BottomPanel;
+import org.flamie.flamethrower.ui.objects.buttons.ButtonAccept;
+import org.flamie.flamethrower.ui.objects.buttons.ButtonCapture;
+import org.flamie.flamethrower.ui.objects.buttons.ButtonChange;
+import org.flamie.flamethrower.ui.objects.buttons.ButtonDecline;
+import org.flamie.flamethrower.ui.objects.buttons.FlashButtonAuto;
+import org.flamie.flamethrower.ui.objects.buttons.FlashButtonOff;
+import org.flamie.flamethrower.ui.objects.buttons.FlashButtonOn;
+import org.flamie.flamethrower.util.ImageSaveUtils;
 import org.flamie.flamethrower.util.PreviewUtils;
 
 import java.io.IOException;
 
 import static org.flamie.flamethrower.util.DimenUtils.dp;
 
-public class MainObjects extends RelativeLayout implements PreviewCallback.CameraListener {
+public class MainObjects extends RelativeLayout implements Camera.PictureCallback {
 
     // TODO: исправить дерьмовую архитектуру, утечки памяти, убиться и не кодить никогда больше
 
@@ -39,15 +39,14 @@ public class MainObjects extends RelativeLayout implements PreviewCallback.Camer
     public static boolean safeToTakePicture = false;
     private byte[] data;
 
+    private CameraController cameraController;
     private Activity activity;
-    private PreviewCallback mPreview;
-    private PictureCallback mPicture;
-    private Camera mCamera;
-    private PreviewUtils previewUtils;
+    private CameraPreview mPreview;
     private MediaRecorder mediaRecorder;
 
     private FlashButtonAuto flashButtonAuto;
     private FlashButtonOn flashButtonOn;
+    private FlashButtonOff flashButtonOff;
     private BottomPanel confirmationPanel;
     private ImageView photoPreview;
     private ButtonAccept buttonAccept;
@@ -57,20 +56,21 @@ public class MainObjects extends RelativeLayout implements PreviewCallback.Camer
     private boolean isFront = false;
     private Bitmap bitmap;
 
-    public MainObjects(Context context, Activity activity) {
+    public MainObjects(Context context, Activity activity, CameraController cameraController) {
         super(context);
         this.activity = activity;
+        this.cameraController = cameraController;
 
-        previewUtils = new PreviewUtils(activity);
-        mCamera = getCameraInstance();
-        mPicture = new PictureCallback(this);
-        mPreview = new PreviewCallback(activity.getApplicationContext(), mCamera, activity, this);
+        mPreview = new CameraPreview(activity.getApplicationContext(), cameraController,
+                                     activity.getWindowManager().getDefaultDisplay().getRotation());
+        cameraController.onPicture(this);
         init();
     }
 
     private void init() {
         flashButtonAuto = new FlashButtonAuto(getContext());
         flashButtonOn = new FlashButtonOn(getContext());
+        flashButtonOff = new FlashButtonOff(getContext());
         confirmationPanel = new BottomPanel(getContext());
         photoPreview = new ImageView(getContext());
         photoPreview.setBackgroundColor(Color.rgb(0, 0, 0));
@@ -85,9 +85,11 @@ public class MainObjects extends RelativeLayout implements PreviewCallback.Camer
         photoPreview.setVisibility(INVISIBLE);
         buttonAccept.setVisibility(INVISIBLE);
         buttonDecline.setVisibility(INVISIBLE);
+        flashButtonOff.setVisibility(INVISIBLE);
 
         LayoutParams flashAutoLayoutParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         LayoutParams flashOnLayoutParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        LayoutParams flashOffLayoutParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         LayoutParams photoPreviewParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
         LayoutParams captureButtonParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         LayoutParams buttonChangeParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
@@ -104,6 +106,11 @@ public class MainObjects extends RelativeLayout implements PreviewCallback.Camer
         flashOnLayoutParams.topMargin = dp(10);
         flashOnLayoutParams.rightMargin = dp(10);
 
+        flashOffLayoutParams.addRule(ALIGN_PARENT_RIGHT);
+        flashOffLayoutParams.addRule(ALIGN_PARENT_TOP);
+        flashOffLayoutParams.topMargin = dp(10);
+        flashOffLayoutParams.rightMargin = dp(10);
+
         photoPreviewParams.addRule(ALIGN_PARENT_TOP);
         photoPreview.setScaleType(ImageView.ScaleType.FIT_START);
         buttonChangeParams.addRule(ALIGN_PARENT_BOTTOM);
@@ -115,15 +122,48 @@ public class MainObjects extends RelativeLayout implements PreviewCallback.Camer
         captureButtonParams.addRule(CENTER_HORIZONTAL);
         captureButtonParams.bottomMargin = dp(15);
 
+        flashButtonOn.setVisibility(INVISIBLE);
+        flashButtonOff.setVisibility(INVISIBLE);
+
         flashButtonAuto.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
+                flashButtonOn.setVisibility(VISIBLE);
                 flashButtonAuto.getSpringOpacity().setEndValue(0);
-                flashButtonAuto.getSpringFlashAuto().setEndValue(100);
-                flashButtonOn.getSpringFlashOn().setEndValue(0);
+                flashButtonAuto.getSpringFlashAuto().setEndValue(200);
+                flashButtonOn.getSpringFlashOn().setEndValue(100);
                 flashButtonOn.getSpringOpacity().setEndValue(255);
+                flashButtonOff.getSpringFlashOff().setEndValue(0);
+                flashButtonAuto.setVisibility(INVISIBLE);
             }
         });
+
+        flashButtonOn.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                flashButtonOff.setVisibility(VISIBLE);
+                flashButtonOn.getSpringOpacity().setEndValue(0);
+                flashButtonOn.getSpringFlashOn().setEndValue(200);
+                flashButtonOff.getSpringFlashOff().setEndValue(100);
+                flashButtonOff.getSpringOpacity().setEndValue(255);
+                flashButtonAuto.getSpringFlashAuto().setEndValue(0);
+                flashButtonOn.setVisibility(INVISIBLE);
+            }
+        });
+
+        flashButtonOff.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                flashButtonAuto.setVisibility(VISIBLE);
+                flashButtonOff.getSpringOpacity().setEndValue(0);
+                flashButtonOff.getSpringFlashOff().setEndValue(200);
+                flashButtonAuto.getSpringFlashAuto().setEndValue(100);
+                flashButtonAuto.getSpringOpacity().setEndValue(255);
+                flashButtonOn.getSpringFlashOn().setEndValue(0);
+                flashButtonOff.setVisibility(INVISIBLE);
+            }
+        });
+
 
         buttonCapture.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -135,10 +175,7 @@ public class MainObjects extends RelativeLayout implements PreviewCallback.Camer
                         onClickStartRecord();
                     }
                 } else {
-                    if (safeToTakePicture) {
-                        mCamera.takePicture(null, null, mPicture);
-                        safeToTakePicture = false;
-                    }
+                cameraController.requireCameraPicture();
                 }
             }
          });
@@ -157,7 +194,7 @@ public class MainObjects extends RelativeLayout implements PreviewCallback.Camer
                     buttonChange.getSpringRadius().setEndValue(dp(3));
                     isFront = true;
                 }
-                mPreview.switchCamera();
+                cameraController.requireCameraCycle();
             }
          });
 
@@ -165,7 +202,8 @@ public class MainObjects extends RelativeLayout implements PreviewCallback.Camer
             @Override
             public void onClick(View v) {
                 // DA
-                mPicture.saveImage(data, mCamera);
+                ImageSaveUtils.saveImage(data);
+                cameraController.getCamera().startPreview();
                 confirmationPanel.setVisibility(INVISIBLE);
                 photoPreview.setVisibility(INVISIBLE);
                 buttonAccept.setVisibility(INVISIBLE);
@@ -177,7 +215,7 @@ public class MainObjects extends RelativeLayout implements PreviewCallback.Camer
             @Override
             public void onClick(View v) {
                 // NJET
-                mCamera.startPreview();
+                cameraController.getCamera().startPreview();
                 confirmationPanel.setVisibility(INVISIBLE);
                 photoPreview.setVisibility(INVISIBLE);
                 buttonAccept.setVisibility(INVISIBLE);
@@ -211,6 +249,8 @@ public class MainObjects extends RelativeLayout implements PreviewCallback.Camer
 
         flashButtonAuto.setLayoutParams(flashAutoLayoutParams);
         flashButtonOn.setLayoutParams(flashOnLayoutParams);
+        flashButtonOff.setLayoutParams(flashOffLayoutParams);
+
         photoPreview.setLayoutParams(photoPreviewParams);
         buttonCapture.setLayoutParams(captureButtonParams);
         bottomPanel.setLayoutParams(bottomPanelParams);
@@ -221,8 +261,9 @@ public class MainObjects extends RelativeLayout implements PreviewCallback.Camer
         addView(bottomPanel);
         addView(buttonCapture);
         addView(buttonChange);
-        addView(flashButtonAuto);
+        addView(flashButtonOff);
         addView(flashButtonOn);
+        addView(flashButtonAuto);
 
         addView(photoPreview);
         addView(confirmationPanel);
@@ -230,25 +271,16 @@ public class MainObjects extends RelativeLayout implements PreviewCallback.Camer
         addView(buttonDecline);
     }
 
-    public synchronized Camera getCameraInstance() {
-        Camera c = null;
-        try {
-            c = Camera.open();
-        } catch (Exception e) {
-            Log.e(TAG, "Camera is not available");
-            e.printStackTrace();
-        }
-        return c;
-    }
-
-    public void photoPreview(byte[] data) {
+    @Override
+    public void onPictureTaken(byte[] data, Camera camera) {
         this.data = data;
 
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = false;
         bitmap = BitmapFactory.decodeByteArray(data, 0, data.length, options);
 
-        bitmap = rotateImage(bitmap, previewUtils.cameraRotation(mPreview.getCameraId()));
+        bitmap = rotateImage(bitmap, PreviewUtils.cameraRotation(cameraController.getCameraInfo(),
+                             activity.getWindowManager().getDefaultDisplay().getRotation()));
 
         photoPreview.setImageBitmap(bitmap);
         confirmationPanel.setVisibility(VISIBLE);
@@ -285,15 +317,15 @@ public class MainObjects extends RelativeLayout implements PreviewCallback.Camer
     }
 
     private boolean prepareVideoRecorder() {
-        mCamera = getCameraInstance();
-        mCamera.setDisplayOrientation(previewUtils.cameraRotation(mPreview.getCameraId()));
+        cameraController.getCamera().setDisplayOrientation(PreviewUtils.cameraRotation(cameraController.getCameraInfo(),
+                                                           activity.getWindowManager().getDefaultDisplay().getRotation()));
         mediaRecorder = new MediaRecorder();
-        mCamera.unlock();
-        mediaRecorder.setCamera(mCamera);
+        cameraController.getCamera().unlock();
+        mediaRecorder.setCamera(cameraController.getCamera());
         mediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
         mediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
         mediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH));
-        mediaRecorder.setOutputFile(ImageSave.getOutputMediaFile(2).toString());
+        mediaRecorder.setOutputFile(ImageSaveUtils.getOutputMediaFile(2).toString());
         mediaRecorder.setPreviewDisplay(mPreview.getHolder().getSurface());
         try {
             mediaRecorder.prepare();
@@ -314,13 +346,8 @@ public class MainObjects extends RelativeLayout implements PreviewCallback.Camer
             mediaRecorder.reset();
             mediaRecorder.release();
             mediaRecorder = null;
-            mCamera.lock();
+            cameraController.getCamera().unlock();
         }
-    }
-
-    @Override
-    public void onCamera(Camera camera) {
-        mCamera = camera;
     }
 
 }

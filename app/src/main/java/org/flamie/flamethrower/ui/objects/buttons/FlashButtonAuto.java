@@ -1,4 +1,4 @@
-package org.flamie.flamethrower.objects.buttons;
+package org.flamie.flamethrower.ui.objects.buttons;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -13,46 +13,46 @@ import com.facebook.rebound.SpringSystem;
 
 import org.flamie.flamethrower.R;
 
-public class FlashButtonOn extends View implements SpringListener {
+public class FlashButtonAuto extends View implements SpringListener {
 
     private SpringSystem mSpringSystemIcon;
-    private Spring mSpringFlashOn;
-    private final Drawable flashDrawableOn;
+    private Spring mSpringFlashAuto;
+    private final Drawable flashDrawableAuto;
 
     private SpringSystem mSpringSystemOpacity;
     private Spring mSpringOpacity;
 
-    public FlashButtonOn(Context context) {
+    public FlashButtonAuto(Context context) {
         super(context);
         mSpringSystemIcon = SpringSystem.create();
-        mSpringFlashOn = mSpringSystemIcon.createSpring();
-        mSpringFlashOn.addListener(this);
+        mSpringFlashAuto = mSpringSystemIcon.createSpring();
+        mSpringFlashAuto.addListener(this);
 
         mSpringSystemOpacity = SpringSystem.create();
         mSpringOpacity = mSpringSystemOpacity.createSpring();
         mSpringOpacity.addListener(this);
 
-        flashDrawableOn = ContextCompat.getDrawable(getContext(), R.drawable.flash_on);
-        flashDrawableOn.setBounds(0, 0, flashDrawableOn.getIntrinsicWidth(), flashDrawableOn.getIntrinsicHeight());
+        flashDrawableAuto = ContextCompat.getDrawable(getContext(), R.drawable.flash_auto);
+        flashDrawableAuto.setBounds(0, 0, flashDrawableAuto.getIntrinsicWidth(), flashDrawableAuto.getIntrinsicHeight());
 
-        mSpringFlashOn.setEndValue(-100);
-        mSpringOpacity.setEndValue(0);
+        mSpringFlashAuto.setEndValue(100);
+        mSpringOpacity.setEndValue(255);
 
         mSpringOpacity.setSpringConfig(new SpringConfig(100, 40));
-        mSpringFlashOn.setSpringConfig(new SpringConfig(100, 40));
+        mSpringFlashAuto.setSpringConfig(new SpringConfig(100, 40));
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
-        flashDrawableOn.draw(canvas);
+        flashDrawableAuto.draw(canvas);
     }
 
     @Override
     public void onSpringUpdate(Spring spring) {
-        int valueY = (int) mSpringFlashOn.getCurrentValue();
+        int valueY = (int) mSpringFlashAuto.getCurrentValue();
         int valueOpacity = (int) mSpringOpacity.getCurrentValue();
-        flashDrawableOn.setBounds(0, valueY, flashDrawableOn.getIntrinsicWidth(), valueY + flashDrawableOn.getIntrinsicHeight());
-        flashDrawableOn.setAlpha(valueOpacity);
+        flashDrawableAuto.setBounds(0, valueY, flashDrawableAuto.getIntrinsicWidth(), valueY + flashDrawableAuto.getIntrinsicHeight());
+        flashDrawableAuto.setAlpha(valueOpacity);
         invalidate();
     }
 
@@ -67,16 +67,17 @@ public class FlashButtonOn extends View implements SpringListener {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        if(flashDrawableOn != null) {
-            setMeasuredDimension(flashDrawableOn.getIntrinsicWidth(), flashDrawableOn.getIntrinsicHeight() + 100);
+        if(flashDrawableAuto != null) {
+            setMeasuredDimension(flashDrawableAuto.getIntrinsicWidth(), flashDrawableAuto.getIntrinsicHeight() + 300);
         }
     }
 
-    public Spring getSpringFlashOn() {
-        return mSpringFlashOn;
+    public Spring getSpringFlashAuto() {
+        return mSpringFlashAuto;
     }
 
     public Spring getSpringOpacity() {
         return mSpringOpacity;
     }
+
 }
