@@ -9,7 +9,7 @@ import org.flamie.flamethrower.CameraController;
 import org.flamie.flamethrower.util.PreviewUtils;
 
 public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback,
-        CameraController.BeforeCameraCallback,
+                                                          CameraController.BeforeCameraCallback,
                                                           CameraController.AfterCameraCallback {
 
     private CameraController cameraController;

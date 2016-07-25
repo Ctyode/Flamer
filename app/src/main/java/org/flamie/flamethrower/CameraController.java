@@ -120,7 +120,9 @@ public class CameraController extends Thread implements Camera.PictureCallback {
         for (BeforeCameraCallback callback : beforeCameraCallbacks) {
             callback.beforeCamera(mCamera);
         }
-        mCamera.release();
+        if(mCamera != null) {
+            mCamera.release();
+        }
         mCamera = null;
         cameraInfo = null;
 

@@ -55,6 +55,9 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
     private boolean videoMode = false;
     private boolean isFront = false;
     private Bitmap bitmap;
+    private boolean flashModeAuto = true;
+    private boolean flashModeOn = false;
+    private boolean flashModeOff = false;
 
     public MainObjects(Context context, Activity activity, CameraController cameraController) {
         super(context);
@@ -98,17 +101,17 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
 
         flashAutoLayoutParams.addRule(ALIGN_PARENT_RIGHT);
         flashAutoLayoutParams.addRule(ALIGN_PARENT_TOP);
-        flashAutoLayoutParams.topMargin = dp(10);
+        flashAutoLayoutParams.topMargin = dp(-20);
         flashAutoLayoutParams.rightMargin = dp(10);
 
         flashOnLayoutParams.addRule(ALIGN_PARENT_RIGHT);
         flashOnLayoutParams.addRule(ALIGN_PARENT_TOP);
-        flashOnLayoutParams.topMargin = dp(10);
+        flashOnLayoutParams.topMargin = dp(-20);
         flashOnLayoutParams.rightMargin = dp(10);
 
         flashOffLayoutParams.addRule(ALIGN_PARENT_RIGHT);
         flashOffLayoutParams.addRule(ALIGN_PARENT_TOP);
-        flashOffLayoutParams.topMargin = dp(10);
+        flashOffLayoutParams.topMargin = dp(-20);
         flashOffLayoutParams.rightMargin = dp(10);
 
         photoPreviewParams.addRule(ALIGN_PARENT_TOP);
@@ -135,6 +138,9 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
                 flashButtonOn.getSpringOpacity().setEndValue(255);
                 flashButtonOff.getSpringFlashOff().setEndValue(0);
                 flashButtonAuto.setVisibility(INVISIBLE);
+                flashModeAuto = false;
+                flashModeOn = true;
+                flashModeOff = false;
             }
         });
 
@@ -148,6 +154,9 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
                 flashButtonOff.getSpringOpacity().setEndValue(255);
                 flashButtonAuto.getSpringFlashAuto().setEndValue(0);
                 flashButtonOn.setVisibility(INVISIBLE);
+                flashModeOn = false;
+                flashModeAuto = false;
+                flashModeOff = true;
             }
         });
 
@@ -161,6 +170,9 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
                 flashButtonAuto.getSpringOpacity().setEndValue(255);
                 flashButtonOn.getSpringFlashOn().setEndValue(0);
                 flashButtonOff.setVisibility(INVISIBLE);
+                flashModeOn = false;
+                flashModeAuto = true;
+                flashModeOff = false;
             }
         });
 
@@ -175,7 +187,20 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
                         onClickStartRecord();
                     }
                 } else {
-                cameraController.requireCameraPicture();
+                    if(flashModeOff) {
+                        Camera.Parameters parameters = cameraController.getCamera().getParameters();
+                        parameters.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
+                        cameraController.getCamera().setParameters(parameters);
+                    } else if(flashModeOn) {
+                        Camera.Parameters parameters = cameraController.getCamera().getParameters();
+                        parameters.setFlashMode(Camera.Parameters.FLASH_MODE_ON);
+                        cameraController.getCamera().setParameters(parameters);
+                    } else if(flashModeAuto) {
+                        Camera.Parameters parameters = cameraController.getCamera().getParameters();
+                        parameters.setFlashMode(Camera.Parameters.FLASH_MODE_AUTO);
+                        cameraController.getCamera().setParameters(parameters);
+                    }
+                    cameraController.requireCameraPicture();
                 }
             }
          });
@@ -259,11 +284,11 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
 
         addView(mPreview);
         addView(bottomPanel);
-        addView(buttonCapture);
         addView(buttonChange);
         addView(flashButtonOff);
         addView(flashButtonOn);
         addView(flashButtonAuto);
+        addView(buttonCapture);
 
         addView(photoPreview);
         addView(confirmationPanel);
