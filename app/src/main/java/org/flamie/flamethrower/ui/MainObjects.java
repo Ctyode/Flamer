@@ -51,8 +51,8 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
     private ImageView photoPreview;
     private ButtonAccept buttonAccept;
     private ButtonDecline buttonDecline;
-    private boolean isRecord = false;
-    private boolean videoMode = false;
+    private boolean isRecording = false;
+    public static boolean videoMode = false;
     private boolean isFront = false;
     private Bitmap bitmap;
     private boolean flashModeAuto = true;
@@ -181,10 +181,20 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
             @Override
             public void onClick(View v) {
                 if(videoMode) {
-                    if(isRecord) {
-                        onClickStopRecord();
+                    if(isRecording) {
+                        buttonCapture.getSpringOuterX().setEndValue(130f);
+                        buttonCapture.getSpringOuterY().setEndValue(100f);
+                        buttonCapture.getSpringBigRecord().setEndValue(0f);
+                        buttonCapture.getSpringRectangleRecord().setEndValue(0f);
+                        isRecording = false;
+//                        onClickStopRecord();
                     } else {
-                        onClickStartRecord();
+                        buttonCapture.getSpringOuterX().setEndValue(0f);
+                        buttonCapture.getSpringOuterY().setEndValue(0f);
+                        buttonCapture.getSpringBigRecord().setEndValue(100f);
+                        buttonCapture.getSpringRectangleRecord().setEndValue(40f);
+                        isRecording = true;
+//                        onClickStartRecord();
                     }
                 } else {
                     if(flashModeOff) {
@@ -254,19 +264,19 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
         mPreview.setOnTouchListener(new OnSwipeTouchListener(activity) {
             public void onSwipeLeft() {
                 bottomPanel.getSpringOpacity().setEndValue(110);
-                buttonCapture.getSpringOuter().setEndValue(130f);
+                buttonCapture.getSpringOuterX().setEndValue(130f);
                 buttonCapture.getSpringInner().setEndValue(0f);
                 buttonCapture.getSpringCentral().setEndValue(0f);
-                buttonCapture.getSpringRecord().setEndValue(20f);
+                buttonCapture.getSpringSmallRecord().setEndValue(20f);
                 videoMode = true;
             }
 
             public void onSwipeRight() {
                 bottomPanel.getSpringOpacity().setEndValue(255);
-                buttonCapture.getSpringOuter().setEndValue(100f);
+                buttonCapture.getSpringOuterX().setEndValue(100f);
                 buttonCapture.getSpringInner().setEndValue(90f);
                 buttonCapture.getSpringCentral().setEndValue(60f);
-                buttonCapture.getSpringRecord().setEndValue(0f);
+                buttonCapture.getSpringSmallRecord().setEndValue(0f);
                 videoMode = false;
             }
         });
@@ -327,7 +337,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
     public void onClickStartRecord() {
         if (prepareVideoRecorder()) {
             mediaRecorder.start();
-            isRecord = true;
+            isRecording = true;
         } else {
             releaseMediaRecorder();
         }
@@ -336,7 +346,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
     public void onClickStopRecord() {
         if (mediaRecorder != null) {
             mediaRecorder.stop();
-            isRecord = false;
+            isRecording = false;
             releaseMediaRecorder();
         }
     }

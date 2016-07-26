@@ -10,36 +10,53 @@ import android.view.View;
 import android.view.ViewTreeObserver;
 
 import com.facebook.rebound.Spring;
+import com.facebook.rebound.SpringConfig;
 import com.facebook.rebound.SpringListener;
 import com.facebook.rebound.SpringSystem;
+
+import org.flamie.flamethrower.ui.MainObjects;
 
 public class ButtonCapture extends View implements SpringListener {
 
     private final RectF outerCircle;
     private final RectF innerCircle;
     private final RectF centralCircle;
-    private final RectF recordCircle;
+    private final RectF recordSmallCircle;
+    private final RectF recordBigCircle;
+    private final RectF recordRectangle;
 
     private Paint outerCirclePaint;
     private Paint innerCirclePaint;
     private Paint centralCirclePaint;
     private Paint recordCirclePaint;
 
-    private SpringSystem mSpringSystemOuter;
+    private SpringSystem mSpringSystemOuterX;
+    private SpringSystem mSpringSystemOuterY;
+
     private SpringSystem mSpringSystemInner;
     private SpringSystem mSpringSystemCentral;
-    private SpringSystem mSpringSystemRecord;
+    private SpringSystem mSpringSystemSmallRecord;
+    private SpringSystem mSpringSystemBigRecord;
+    private SpringSystem mSpringSystemRectangleRecord;
 
-    private Spring mSpringOuter;
+    private Spring mSpringOuterX;
+    private Spring mSpringOuterY;
+
     private Spring mSpringInner;
     private Spring mSpringCentral;
-    private Spring mSpringRecord;
+    private Spring mSpringSmallRecord;
+    private Spring mSpringBigRecord;
+    private Spring mSpringRectangleRecord;
 
     public ButtonCapture(Context context) {
         super(context);
-        mSpringSystemOuter = SpringSystem.create();
-        mSpringOuter = mSpringSystemOuter.createSpring();
-        mSpringOuter.addListener(this);
+        mSpringSystemOuterX = SpringSystem.create();
+        mSpringOuterX = mSpringSystemOuterX.createSpring();
+        mSpringOuterX.addListener(this);
+
+        mSpringSystemOuterY = SpringSystem.create();
+        mSpringOuterY = mSpringSystemOuterY.createSpring();
+        mSpringOuterY.addListener(this);
 
         mSpringSystemInner = SpringSystem.create();
         mSpringInner = mSpringSystemInner.createSpring();
@@ -49,9 +66,17 @@ public class ButtonCapture extends View implements SpringListener {
         mSpringCentral = mSpringSystemCentral.createSpring();
         mSpringCentral.addListener(this);
 
-        mSpringSystemRecord = SpringSystem.create();
-        mSpringRecord = mSpringSystemRecord.createSpring();
-        mSpringRecord.addListener(this);
+        mSpringSystemSmallRecord = SpringSystem.create();
+        mSpringSmallRecord = mSpringSystemSmallRecord.createSpring();
+        mSpringSmallRecord.addListener(this);
+
+        mSpringSystemBigRecord = SpringSystem.create();
+        mSpringBigRecord = mSpringSystemBigRecord.createSpring();
+        mSpringBigRecord.addListener(this);
+
+        mSpringSystemRectangleRecord = SpringSystem.create();
+        mSpringRectangleRecord = mSpringSystemRectangleRecord.createSpring();
+        mSpringRectangleRecord.addListener(this);
 
         outerCirclePaint = new Paint();
         outerCirclePaint.setAntiAlias(true);
@@ -61,12 +86,16 @@ public class ButtonCapture extends View implements SpringListener {
         outerCircle = new RectF();
         innerCircle = new RectF();
         centralCircle = new RectF();
-        recordCircle = new RectF();
+        recordSmallCircle = new RectF();
+        recordBigCircle = new RectF();
+        recordRectangle = new RectF();
 
-        mSpringOuter.setCurrentValue(100f);
+        mSpringOuterX.setCurrentValue(100f);
+        mSpringOuterY.setCurrentValue(100f);
         mSpringInner.setCurrentValue(90f);
         mSpringCentral.setCurrentValue(60f);
-        mSpringRecord.setCurrentValue(0f);
+        mSpringSmallRecord.setCurrentValue(0f);
+        mSpringBigRecord.setCurrentValue(0f);
 
         innerCirclePaint = new Paint();
         innerCirclePaint.setAntiAlias(true);
@@ -83,13 +112,19 @@ public class ButtonCapture extends View implements SpringListener {
         recordCirclePaint.setStyle(Paint.Style.FILL);
         recordCirclePaint.setColor(Color.RED);
 
+        mSpringOuterX.setSpringConfig(new SpringConfig(100, 18));
+        mSpringOuterY.setSpringConfig(new SpringConfig(100, 18));
+        mSpringBigRecord.setSpringConfig(new SpringConfig(100, 18));
+
         getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
                 outerCircle.set((getWidth() / 2) - 100f, 0f, (getWidth() / 2) + 100f, 200f);
                 innerCircle.set((getWidth() / 2) - 90f, 10f, (getWidth() / 2) + 90f, 190f);
                 centralCircle.set((getWidth() / 2) - 60f, 40f, (getWidth() / 2) + 60f, 160f);
-                recordCircle.set((getWidth() / 2), 100f, (getWidth() / 2), 100f);
+                recordSmallCircle.set((getWidth() / 2), 100f, (getWidth() / 2), 100f);
+                recordBigCircle.set((getWidth() / 2), 100f, (getWidth() / 2), 100f);
+                recordRectangle.set((getWidth() / 2), 100f, (getWidth() / 2), 100f);
 
                 if(Build.VERSION.SDK_INT >= 16) {
                     getViewTreeObserver().removeOnGlobalLayoutListener(this);
@@ -106,19 +141,31 @@ public class ButtonCapture extends View implements SpringListener {
         canvas.drawRoundRect(outerCircle, 100f, 100f, outerCirclePaint);
         canvas.drawRoundRect(innerCircle, 90f, 90f, innerCirclePaint);
         canvas.drawRoundRect(centralCircle, 60f, 60f, centralCirclePaint);
-        canvas.drawRoundRect(recordCircle, 20f, 20f, recordCirclePaint);
+        canvas.drawRoundRect(recordSmallCircle, 20f, 20f, recordCirclePaint);
+        canvas.drawRoundRect(recordBigCircle, 100f, 100f, recordCirclePaint);
+        canvas.drawRoundRect(recordRectangle, 15f, 15f, outerCirclePaint);
     }
 
     @Override
     public void onSpringUpdate(Spring spring) {
-        float valueOuter = (float) mSpringOuter.getCurrentValue();
+        float valueOuterX = (float) mSpringOuterX.getCurrentValue();
+        float valueOuterY = (float) mSpringOuterY.getCurrentValue();
+
         float valueInner = (float) mSpringInner.getCurrentValue();
         float valueCentral = (float) mSpringCentral.getCurrentValue();
-        float valueRecord = (float) mSpringRecord.getCurrentValue();
-        outerCircle.set(getWidth() / 2 - valueOuter, 0, getWidth() / 2 + valueOuter, 200f);
+        float valueSmallRecord = (float) mSpringSmallRecord.getCurrentValue();
+        float valueBigRecord = (float) mSpringBigRecord.getCurrentValue();
+        float valueRectangleRecord = (float) mSpringRectangleRecord.getCurrentValue();
+        if(MainObjects.videoMode) {
+            outerCircle.set(getWidth() / 2 - valueOuterX, 100f - valueOuterY, getWidth() / 2 + valueOuterX, 100f + valueOuterY);
+        } else {
+            outerCircle.set(getWidth() / 2 - valueOuterX, 0, getWidth() / 2 + valueOuterX, 200f);
+        }
         innerCircle.set(getWidth() / 2 - valueInner, 100f - valueInner, getWidth() / 2 + valueInner, 100f + valueInner);
         centralCircle.set(getWidth() / 2 - valueCentral, 100f - valueCentral, getWidth() / 2 + valueCentral, 100f + valueCentral);
-        recordCircle.set(getWidth() / 2 - valueRecord, 100f - valueRecord, getWidth() / 2 + valueRecord, 100f + valueRecord);
+        recordSmallCircle.set(getWidth() / 2 - valueSmallRecord, 100f - valueSmallRecord, getWidth() / 2 + valueSmallRecord, 100f + valueSmallRecord);
+        recordBigCircle.set(getWidth() / 2 - valueBigRecord, 100f - valueBigRecord, getWidth() / 2 + valueBigRecord, 100f + valueBigRecord);
+        recordRectangle.set(getWidth() / 2 - valueRectangleRecord, 100f - valueRectangleRecord, getWidth() / 2 + valueRectangleRecord, 100f + valueRectangleRecord);
         invalidate();
     }
 
@@ -131,9 +178,14 @@ public class ButtonCapture extends View implements SpringListener {
     @Override
     public void onSpringEndStateChange(Spring spring) {}
 
-    public Spring getSpringOuter() {
-        return mSpringOuter;
+    public Spring getSpringOuterX() {
+        return mSpringOuterX;
     }
+
+    public Spring getSpringOuterY() {
+        return mSpringOuterY;
+    }
+
 
     public Spring getSpringInner() {
         return mSpringInner;
@@ -143,8 +195,16 @@ public class ButtonCapture extends View implements SpringListener {
         return mSpringCentral;
     }
 
-    public Spring getSpringRecord() {
-        return mSpringRecord;
+    public Spring getSpringSmallRecord() {
+        return mSpringSmallRecord;
+    }
+
+    public Spring getSpringBigRecord() {
+        return mSpringBigRecord;
+    }
+
+    public Spring getSpringRectangleRecord() {
+        return mSpringRectangleRecord;
     }
 
     @Override
