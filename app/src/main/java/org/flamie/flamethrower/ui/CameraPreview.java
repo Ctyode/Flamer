@@ -8,12 +8,16 @@ import android.view.SurfaceView;
 import org.flamie.flamethrower.CameraController;
 import org.flamie.flamethrower.util.PreviewUtils;
 
+import java.util.List;
+
 public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback,
                                                           CameraController.BeforeCameraCallback,
                                                           CameraController.AfterCameraCallback {
 
     private CameraController cameraController;
     private int displayRotation;
+    private List<Camera.Size> sizes;
+    private Camera.Size size;
 
     public CameraPreview(Context context, CameraController cameraController, int displayRotation) {
         super(context);
@@ -32,6 +36,13 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         try {
             if(camera != null) {
                 camera.setPreviewDisplay(getHolder());
+                Camera.Parameters parameters = camera.getParameters();
+                sizes = parameters.getSupportedPreviewSizes();
+                if(sizes != null) {
+                    size = PreviewUtils.getOptimalPreviewSize(sizes, getWidth(), getHeight());
+                }
+                parameters.setPreviewSize(size.width, size.height);
+                camera.setParameters(parameters);
                 camera.startPreview();
                 camera.setDisplayOrientation(PreviewUtils.cameraRotation(cameraController.getCameraInfo(),
                                                                          displayRotation));
@@ -93,4 +104,5 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             camera.setPreviewCallback(null);
         }
     }
+
 }

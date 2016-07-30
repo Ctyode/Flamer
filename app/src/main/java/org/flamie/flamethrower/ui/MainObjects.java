@@ -28,7 +28,6 @@ import org.flamie.flamethrower.util.ImageSaveUtils;
 import org.flamie.flamethrower.util.PreviewUtils;
 
 import java.io.IOException;
-import java.lang.ref.WeakReference;
 
 import static org.flamie.flamethrower.util.DimenUtils.dp;
 
@@ -37,7 +36,6 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
     // TODO: исправить дерьмовую архитектуру, утечки памяти, убиться и не кодить никогда больше
 
     private static final String TAG = "MainObjects";
-    public static boolean safeToTakePicture = false;
     private byte[] data;
 
     private CameraController cameraController;
@@ -55,8 +53,8 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
     private boolean isRecording = false;
     public static boolean videoMode = false;
     private boolean isFront = false;
-    private WeakReference<Bitmap> bitmap;
-    private WeakReference<Bitmap> newBitmap;
+    private Bitmap bitmap;
+    private Bitmap newBitmap;
     private boolean flashModeAuto = true;
     private boolean flashModeOn = false;
     private boolean flashModeOff = false;
@@ -211,18 +209,20 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
 //                        onClickStartRecord();
                     }
                 } else {
-                    if(flashModeOff) {
-                        Camera.Parameters parameters = cameraController.getCamera().getParameters();
-                        parameters.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
-                        cameraController.getCamera().setParameters(parameters);
-                    } else if(flashModeOn) {
-                        Camera.Parameters parameters = cameraController.getCamera().getParameters();
-                        parameters.setFlashMode(Camera.Parameters.FLASH_MODE_ON);
-                        cameraController.getCamera().setParameters(parameters);
-                    } else if(flashModeAuto) {
-                        Camera.Parameters parameters = cameraController.getCamera().getParameters();
-                        parameters.setFlashMode(Camera.Parameters.FLASH_MODE_AUTO);
-                        cameraController.getCamera().setParameters(parameters);
+                    if(cameraController.getCameraId() == Camera.CameraInfo.CAMERA_FACING_BACK) {
+                        if (flashModeOff) {
+                            Camera.Parameters parameters = cameraController.getCamera().getParameters();
+                            parameters.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
+                            cameraController.getCamera().setParameters(parameters);
+                        } else if (flashModeOn) {
+                            Camera.Parameters parameters = cameraController.getCamera().getParameters();
+                            parameters.setFlashMode(Camera.Parameters.FLASH_MODE_ON);
+                            cameraController.getCamera().setParameters(parameters);
+                        } else if (flashModeAuto) {
+                            Camera.Parameters parameters = cameraController.getCamera().getParameters();
+                            parameters.setFlashMode(Camera.Parameters.FLASH_MODE_AUTO);
+                            cameraController.getCamera().setParameters(parameters);
+                        }
                     }
                     cameraController.requireCameraPicture();
                 }
@@ -257,7 +257,8 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
                 photoPreview.setVisibility(INVISIBLE);
                 buttonAccept.setVisibility(INVISIBLE);
                 buttonDecline.setVisibility(INVISIBLE);
-                newBitmap.get().recycle();
+                bitmap.recycle();
+                newBitmap.recycle();
                 System.gc();
             }
         });
@@ -271,9 +272,9 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
                 photoPreview.setVisibility(INVISIBLE);
                 buttonAccept.setVisibility(INVISIBLE);
                 buttonDecline.setVisibility(INVISIBLE);
-                newBitmap.get().recycle();
+                bitmap.recycle();
+                newBitmap.recycle();
                 System.gc();
-                safeToTakePicture = true;
             }
         });
 
@@ -330,13 +331,24 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
 
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = false;
-        bitmap = new WeakReference<>(BitmapFactory.decodeByteArray(data, 0, data.length, options));
+        options.inSampleSize = 3;
+        bitmap = BitmapFactory.decodeByteArray(data, 0, data.length, options);
+
         Matrix matrix = new Matrix();
+        if (cameraController.getCameraInfo().facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+            float[] mirrorY = { -1, 0, 0, 0, 1, 0, 0, 0, 1 };
+            Matrix matrixMirrorY = new Matrix();
+            matrixMirrorY.setValues(mirrorY);
+            matrix.postConcat(matrixMirrorY);
+        }
         matrix.postRotate(PreviewUtils.cameraRotation(cameraController.getCameraInfo(),
                           activity.getWindowManager().getDefaultDisplay().getRotation()));
-        newBitmap = new WeakReference<>(Bitmap.createBitmap(bitmap.get(), 0, 0, bitmap.get().getWidth(), bitmap.get().getHeight(), matrix, true));
-        photoPreview.setImageBitmap(newBitmap.get());
-        System.gc();
+
+        newBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+//        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+//        newBitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+//        this.data = stream.toByteArray();
+        photoPreview.setImageBitmap(newBitmap);
 
         confirmationPanel.setVisibility(VISIBLE);
         photoPreview.setVisibility(VISIBLE);

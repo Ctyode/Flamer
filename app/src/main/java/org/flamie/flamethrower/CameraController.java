@@ -65,18 +65,23 @@ public class CameraController extends Thread implements Camera.PictureCallback {
     @Override
     public void run() {
         for(;;) {
-            if(cameraOpenRequired) {
-                openCamera();
-                cameraOpenRequired = false;
-            } else if(cameraCycleRequired) {
-                cameraCycle();
-                cameraCycleRequired = false;
-            } else if(cameraReleaseRequired) {
-                releaseCamera();
-                cameraReleaseRequired = false;
-            } else if(cameraPictureRequired) {
-                takePicture();
-                cameraPictureRequired = false;
+            try {
+                Thread.sleep(60);
+                if(cameraOpenRequired) {
+                    openCamera();
+                    cameraOpenRequired = false;
+                } else if(cameraCycleRequired) {
+                    cameraCycle();
+                    cameraCycleRequired = false;
+                } else if(cameraReleaseRequired) {
+                    releaseCamera();
+                    cameraReleaseRequired = false;
+                } else if(cameraPictureRequired) {
+                    takePicture();
+                    cameraPictureRequired = false;
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
     }
