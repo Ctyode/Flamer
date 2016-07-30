@@ -28,6 +28,7 @@ import org.flamie.flamethrower.util.ImageSaveUtils;
 import org.flamie.flamethrower.util.PreviewUtils;
 
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 
 import static org.flamie.flamethrower.util.DimenUtils.dp;
 
@@ -54,7 +55,8 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
     private boolean isRecording = false;
     public static boolean videoMode = false;
     private boolean isFront = false;
-    private Bitmap bitmap;
+    private WeakReference<Bitmap> bitmap;
+    private WeakReference<Bitmap> newBitmap;
     private boolean flashModeAuto = true;
     private boolean flashModeOn = false;
     private boolean flashModeOff = false;
@@ -95,6 +97,8 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
         LayoutParams flashOffLayoutParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         LayoutParams photoPreviewParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
         LayoutParams captureButtonParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        LayoutParams acceptButtonParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        LayoutParams declineButtonParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         LayoutParams buttonChangeParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         LayoutParams bottomPanelParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         LayoutParams previewParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
@@ -124,6 +128,16 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
         captureButtonParams.addRule(ALIGN_PARENT_BOTTOM);
         captureButtonParams.addRule(CENTER_HORIZONTAL);
         captureButtonParams.bottomMargin = dp(15);
+
+        acceptButtonParams.addRule(ALIGN_PARENT_BOTTOM);
+        acceptButtonParams.addRule(ALIGN_PARENT_RIGHT);
+        acceptButtonParams.bottomMargin = dp(25);
+        acceptButtonParams.rightMargin = dp(38);
+
+        declineButtonParams.addRule(ALIGN_PARENT_BOTTOM);
+        declineButtonParams.addRule(ALIGN_PARENT_LEFT);
+        declineButtonParams.bottomMargin = dp(25);
+        declineButtonParams.leftMargin = dp(0);
 
         flashButtonOn.setVisibility(INVISIBLE);
         flashButtonOff.setVisibility(INVISIBLE);
@@ -243,6 +257,8 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
                 photoPreview.setVisibility(INVISIBLE);
                 buttonAccept.setVisibility(INVISIBLE);
                 buttonDecline.setVisibility(INVISIBLE);
+                newBitmap.get().recycle();
+                System.gc();
             }
         });
 
@@ -255,9 +271,9 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
                 photoPreview.setVisibility(INVISIBLE);
                 buttonAccept.setVisibility(INVISIBLE);
                 buttonDecline.setVisibility(INVISIBLE);
-                bitmap.recycle();
+                newBitmap.get().recycle();
+                System.gc();
                 safeToTakePicture = true;
-
             }
         });
 
@@ -286,6 +302,8 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
         flashButtonOn.setLayoutParams(flashOnLayoutParams);
         flashButtonOff.setLayoutParams(flashOffLayoutParams);
 
+        buttonAccept.setLayoutParams(acceptButtonParams);
+        buttonDecline.setLayoutParams(declineButtonParams);
         photoPreview.setLayoutParams(photoPreviewParams);
         buttonCapture.setLayoutParams(captureButtonParams);
         bottomPanel.setLayoutParams(bottomPanelParams);
@@ -312,26 +330,18 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
 
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = false;
-        bitmap = BitmapFactory.decodeByteArray(data, 0, data.length, options);
+        bitmap = new WeakReference<>(BitmapFactory.decodeByteArray(data, 0, data.length, options));
+        Matrix matrix = new Matrix();
+        matrix.postRotate(PreviewUtils.cameraRotation(cameraController.getCameraInfo(),
+                          activity.getWindowManager().getDefaultDisplay().getRotation()));
+        newBitmap = new WeakReference<>(Bitmap.createBitmap(bitmap.get(), 0, 0, bitmap.get().getWidth(), bitmap.get().getHeight(), matrix, true));
+        photoPreview.setImageBitmap(newBitmap.get());
+        System.gc();
 
-        bitmap = rotateImage(bitmap, PreviewUtils.cameraRotation(cameraController.getCameraInfo(),
-                             activity.getWindowManager().getDefaultDisplay().getRotation()));
-
-        photoPreview.setImageBitmap(bitmap);
         confirmationPanel.setVisibility(VISIBLE);
         photoPreview.setVisibility(VISIBLE);
         buttonAccept.setVisibility(VISIBLE);
         buttonDecline.setVisibility(VISIBLE);
-    }
-
-    public static Bitmap rotateImage(Bitmap source, float angle) {
-        Bitmap retVal;
-
-        Matrix matrix = new Matrix();
-        matrix.postRotate(angle);
-        retVal = Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
-
-        return retVal;
     }
 
     public void onClickStartRecord() {
