@@ -15,6 +15,7 @@ public class ImageSaveUtils {
     public static final int MEDIA_TYPE_IMAGE = 1;
     public static final int MEDIA_TYPE_VIDEO = 2;
     public static final String TAG = "ImageSaveUtils";
+    public static File mediaFile;
 
     public static File getOutputMediaFile(int type) {
         File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "Flamethrower");
@@ -25,7 +26,6 @@ public class ImageSaveUtils {
             }
         }
 
-        File mediaFile;
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         if (type == MEDIA_TYPE_IMAGE){
             mediaFile = new File(mediaStorageDir.getPath() + File.separator + "FlamePhoto_"+ timeStamp + ".jpg");
@@ -55,5 +55,7 @@ public class ImageSaveUtils {
             Log.d(TAG, "Error accessing file: " + e.getMessage());
         }
     }
+
+
 
 }
