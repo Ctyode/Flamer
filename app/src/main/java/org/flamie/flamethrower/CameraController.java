@@ -2,6 +2,7 @@ package org.flamie.flamethrower;
 
 import android.hardware.Camera;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,14 +16,36 @@ public class CameraController extends Thread implements Camera.PictureCallback {
         void afterCamera(Camera camera);
     }
 
+    public interface BeforeUnlockCallback {
+        void beforeUnlock(Camera camera);
+    }
+
+    public interface AfterUnlockCallback {
+        void afterUnlock(Camera camera);
+    }
+
+    public interface BeforeReconnectCallback {
+        void beforeReconnect(Camera camera);
+    }
+
+    public interface AfterReconnectCallback {
+        void afterReconnect(Camera camera);
+    }
+
     private List<BeforeCameraCallback> beforeCameraCallbacks;
     private List<AfterCameraCallback> afterCameraCallbacks;
     private List<Camera.PictureCallback> onPictureCallbacks;
+    private List<BeforeUnlockCallback> beforeUnlockCallbacks;
+    private List<AfterUnlockCallback> afterUnlockCallbacks;
+    private List<BeforeReconnectCallback> beforeReconnectCallbacks;
+    private List<AfterReconnectCallback> afterReconnectCallbacks;
 
     private boolean cameraCycleRequired = false;
     private boolean cameraOpenRequired = false;
     private boolean cameraReleaseRequired = false;
     private boolean cameraPictureRequired = false;
+    private boolean cameraUnlockRequired = false;
+    private boolean cameraReconnectRequired = false;
 
     private Camera mCamera;
     private Camera.CameraInfo cameraInfo;
@@ -32,6 +55,10 @@ public class CameraController extends Thread implements Camera.PictureCallback {
         beforeCameraCallbacks = new ArrayList<>();
         afterCameraCallbacks = new ArrayList<>();
         onPictureCallbacks = new ArrayList<>();
+        beforeUnlockCallbacks = new ArrayList<>();
+        afterUnlockCallbacks = new ArrayList<>();
+        beforeReconnectCallbacks = new ArrayList<>();
+        afterReconnectCallbacks = new ArrayList<>();
     }
 
     public void beforeCamera(BeforeCameraCallback beforeCameraCallback) {
@@ -62,6 +89,14 @@ public class CameraController extends Thread implements Camera.PictureCallback {
         cameraPictureRequired = true;
     }
 
+    public void requireCameraUnlock() {
+        cameraUnlockRequired = true;
+    }
+
+    public void requireCameraReconnect() {
+        cameraReconnectRequired = true;
+    }
+
     @Override
     public void run() {
         for(;;) {
@@ -79,6 +114,12 @@ public class CameraController extends Thread implements Camera.PictureCallback {
                 } else if(cameraPictureRequired) {
                     takePicture();
                     cameraPictureRequired = false;
+                } else if(cameraUnlockRequired) {
+                    unlockCamera();
+                    cameraUnlockRequired = false;
+                } else if(cameraReconnectRequired) {
+                    reconnectCamera();
+                    cameraReconnectRequired = false;
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -133,6 +174,34 @@ public class CameraController extends Thread implements Camera.PictureCallback {
 
         for(AfterCameraCallback callback : afterCameraCallbacks) {
             callback.afterCamera(mCamera);
+        }
+    }
+
+    private void unlockCamera() {
+        for (BeforeUnlockCallback callback : beforeUnlockCallbacks) {
+            callback.beforeUnlock(mCamera);
+        }
+
+        mCamera.unlock();
+
+        for(AfterUnlockCallback callback : afterUnlockCallbacks) {
+            callback.afterUnlock(mCamera);
+        }
+    }
+
+    private void reconnectCamera() {
+        for (BeforeReconnectCallback callback : beforeReconnectCallbacks) {
+            callback.beforeReconnect(mCamera);
+        }
+
+        try {
+            mCamera.reconnect();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        for(AfterReconnectCallback callback : afterReconnectCallbacks) {
+            callback.afterReconnect(mCamera);
         }
     }
 
