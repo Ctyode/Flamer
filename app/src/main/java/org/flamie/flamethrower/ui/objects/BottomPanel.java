@@ -14,17 +14,24 @@ import com.facebook.rebound.SpringSystem;
 
 public class BottomPanel extends View implements SpringListener {
 
-    private SpringSystem mSpringSystem;
+    private SpringSystem mSpringSystemOpacity;
     private Spring mSpringOpacity;
+    private SpringSystem mSpringSystemPosition;
+    private Spring mSpringPositionY;
 
     private Paint panelBackgroundPaint;
     private RectF panelBackground;
+    private int positionY;
 
     public BottomPanel(Context context) {
         super(context);
-        mSpringSystem = SpringSystem.create();
-        mSpringOpacity = mSpringSystem.createSpring();
+        mSpringSystemOpacity = SpringSystem.create();
+        mSpringOpacity = mSpringSystemOpacity.createSpring();
         mSpringOpacity.addListener(this);
+
+        mSpringSystemPosition = SpringSystem.create();
+        mSpringPositionY = mSpringSystemPosition.createSpring();
+        mSpringPositionY.addListener(this);
 
         panelBackgroundPaint = new Paint();
         panelBackgroundPaint.setAntiAlias(true);
@@ -34,17 +41,21 @@ public class BottomPanel extends View implements SpringListener {
         panelBackground = new RectF();
         mSpringOpacity.setSpringConfig(new SpringConfig(24, 12));
         mSpringOpacity.setCurrentValue(255);
+
+        mSpringPositionY.setCurrentValue(0);
+        mSpringPositionY.setSpringConfig(new SpringConfig(100, 24));
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
-        panelBackground.set(0, 1400f, getWidth(), getHeight());
+        panelBackground.set(0, 1400 + positionY, getWidth(), getHeight() + positionY);
         canvas.drawRect(panelBackground, panelBackgroundPaint);
     }
 
     @Override
     public void onSpringUpdate(Spring spring) {
         int opacity = (int) mSpringOpacity.getCurrentValue();
+        positionY = (int) mSpringPositionY.getCurrentValue();
         panelBackgroundPaint.setColor(Color.argb(opacity, 37, 39, 42));
         invalidate();
     }
@@ -62,4 +73,7 @@ public class BottomPanel extends View implements SpringListener {
         return mSpringOpacity;
     }
 
+    public Spring getSpringPositionY() {
+        return mSpringPositionY;
+    }
 }
