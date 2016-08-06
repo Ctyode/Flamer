@@ -10,7 +10,7 @@ public class Flamethrower extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        context = this;
+        context = this.getApplicationContext();
     }
 
     public static Context getContext() {

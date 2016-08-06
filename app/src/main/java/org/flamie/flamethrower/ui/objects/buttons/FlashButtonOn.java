@@ -15,6 +15,8 @@ import org.flamie.flamethrower.R;
 
 public class FlashButtonOn extends View implements SpringListener {
 
+    private boolean visible;
+
     private SpringSystem mSpringSystemIcon;
     private Spring mSpringFlashOn;
     private final Drawable flashDrawableOn;
@@ -24,6 +26,8 @@ public class FlashButtonOn extends View implements SpringListener {
 
     public FlashButtonOn(Context context) {
         super(context);
+        visible = false;
+
         mSpringSystemIcon = SpringSystem.create();
         mSpringFlashOn = mSpringSystemIcon.createSpring();
         mSpringFlashOn.addListener(this);
@@ -35,11 +39,11 @@ public class FlashButtonOn extends View implements SpringListener {
         flashDrawableOn = ContextCompat.getDrawable(getContext(), R.drawable.flash_on);
         flashDrawableOn.setBounds(0, 0, flashDrawableOn.getIntrinsicWidth(), flashDrawableOn.getIntrinsicHeight());
 
-        mSpringFlashOn.setEndValue(0);
+        mSpringFlashOn.setCurrentValue(0);
         mSpringOpacity.setEndValue(0);
 
-        mSpringOpacity.setSpringConfig(new SpringConfig(100, 40));
-        mSpringFlashOn.setSpringConfig(new SpringConfig(100, 40));
+        mSpringOpacity.setSpringConfig(new SpringConfig(230, 30));
+        mSpringFlashOn.setSpringConfig(new SpringConfig(230, 30));
     }
 
     @Override
@@ -57,10 +61,20 @@ public class FlashButtonOn extends View implements SpringListener {
     }
 
     @Override
-    public void onSpringAtRest(Spring spring) {}
+    public void onSpringAtRest(Spring spring) {
+        if(!visible) {
+            setVisibility(INVISIBLE);
+            mSpringFlashOn.setEndValue(0);
+            mSpringFlashOn.setCurrentValue(0);
+        }
+    }
 
     @Override
-    public void onSpringActivate(Spring spring) {}
+    public void onSpringActivate(Spring spring) {
+        if(visible) {
+            setVisibility(VISIBLE);
+        }
+    }
 
     @Override
     public void onSpringEndStateChange(Spring spring) {}
@@ -72,11 +86,17 @@ public class FlashButtonOn extends View implements SpringListener {
         }
     }
 
-    public Spring getSpringFlashOn() {
-        return mSpringFlashOn;
+    public void hide() {
+        mSpringOpacity.setEndValue(0);
+        mSpringFlashOn.setEndValue(200);
+        visible = false;
     }
 
-    public Spring getSpringOpacity() {
-        return mSpringOpacity;
+    public void show() {
+        System.out.println("шерстяной пидорас");
+        mSpringOpacity.setEndValue(255);
+        mSpringFlashOn.setEndValue(100);
+        visible = true;
     }
+
 }

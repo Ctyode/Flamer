@@ -62,7 +62,7 @@ public class ButtonChange extends View implements SpringListener {
         switchDrawable = ContextCompat.getDrawable(getContext(), R.drawable.switcher);
         switchDrawable.setBounds(0, 0, switchDrawable.getIntrinsicWidth(), switchDrawable.getIntrinsicHeight());
 
-        mSpringOpacity.setSpringConfig(new SpringConfig(50, 90));
+        mSpringOpacity.setSpringConfig(new SpringConfig(210, 30));
         mSpringOpacity.setCurrentValue(255);
     }
 

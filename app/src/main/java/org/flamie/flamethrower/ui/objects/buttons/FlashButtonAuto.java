@@ -15,6 +15,8 @@ import org.flamie.flamethrower.R;
 
 public class FlashButtonAuto extends View implements SpringListener {
 
+    private boolean visible;
+
     private SpringSystem mSpringSystemIcon;
     private Spring mSpringFlashAuto;
     private final Drawable flashDrawableAuto;
@@ -24,6 +26,8 @@ public class FlashButtonAuto extends View implements SpringListener {
 
     public FlashButtonAuto(Context context) {
         super(context);
+        visible = true;
+
         mSpringSystemIcon = SpringSystem.create();
         mSpringFlashAuto = mSpringSystemIcon.createSpring();
         mSpringFlashAuto.addListener(this);
@@ -35,11 +39,11 @@ public class FlashButtonAuto extends View implements SpringListener {
         flashDrawableAuto = ContextCompat.getDrawable(getContext(), R.drawable.flash_auto);
         flashDrawableAuto.setBounds(0, 0, flashDrawableAuto.getIntrinsicWidth(), flashDrawableAuto.getIntrinsicHeight());
 
-        mSpringFlashAuto.setEndValue(100);
+        mSpringFlashAuto.setCurrentValue(100);
         mSpringOpacity.setEndValue(255);
 
-        mSpringOpacity.setSpringConfig(new SpringConfig(100, 40));
-        mSpringFlashAuto.setSpringConfig(new SpringConfig(100, 40));
+        mSpringOpacity.setSpringConfig(new SpringConfig(230, 30));
+        mSpringFlashAuto.setSpringConfig(new SpringConfig(230, 30));
     }
 
     @Override
@@ -57,10 +61,20 @@ public class FlashButtonAuto extends View implements SpringListener {
     }
 
     @Override
-    public void onSpringAtRest(Spring spring) {}
+    public void onSpringAtRest(Spring spring) {
+        if(!visible) {
+            setVisibility(INVISIBLE);
+            mSpringFlashAuto.setEndValue(0);
+            mSpringFlashAuto.setCurrentValue(0);
+        }
+    }
 
     @Override
-    public void onSpringActivate(Spring spring) {}
+    public void onSpringActivate(Spring spring) {
+        if(visible) {
+            setVisibility(VISIBLE);
+        }
+    }
 
     @Override
     public void onSpringEndStateChange(Spring spring) {}
@@ -72,12 +86,16 @@ public class FlashButtonAuto extends View implements SpringListener {
         }
     }
 
-    public Spring getSpringFlashAuto() {
-        return mSpringFlashAuto;
+    public void hide() {
+        mSpringOpacity.setEndValue(0);
+        mSpringFlashAuto.setEndValue(200);
+        visible = false;
     }
 
-    public Spring getSpringOpacity() {
-        return mSpringOpacity;
+    public void show() {
+        mSpringOpacity.setEndValue(255);
+        mSpringFlashAuto.setEndValue(100);
+        visible = true;
     }
 
 }

@@ -16,6 +16,7 @@ import android.widget.RelativeLayout;
 import android.widget.VideoView;
 
 import org.flamie.flamethrower.CameraController;
+import org.flamie.flamethrower.Flamethrower;
 import org.flamie.flamethrower.OnSwipeTouchListener;
 import org.flamie.flamethrower.ui.objects.BottomPanel;
 import org.flamie.flamethrower.ui.objects.buttons.ButtonAccept;
@@ -78,21 +79,22 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
     }
 
     private void init() {
-        flashButtonAuto = new FlashButtonAuto(getContext());
-        flashButtonOn = new FlashButtonOn(getContext());
-        flashButtonOff = new FlashButtonOff(getContext());
-        confirmationPanel = new BottomPanel(getContext());
-        photoPreview = new ImageView(getContext());
+        Context context = Flamethrower.getContext();
+        flashButtonAuto = new FlashButtonAuto(context);
+        flashButtonOn = new FlashButtonOn(context);
+        flashButtonOff = new FlashButtonOff(context);
+        confirmationPanel = new BottomPanel(context);
+        photoPreview = new ImageView(context);
         photoPreview.setBackgroundColor(Color.rgb(0, 0, 0));
-        buttonAccept = new ButtonAccept(getContext());
-        buttonDecline = new ButtonDecline(getContext());
-        buttonPlay = new ButtonPlay(getContext());
-        videoView = new VideoView(getContext());
+        buttonAccept = new ButtonAccept(context);
+        buttonDecline = new ButtonDecline(context);
+        buttonPlay = new ButtonPlay(context);
+        videoView = new VideoView(context);
         videoView.setZOrderMediaOverlay(true);
 
-        final BottomPanel bottomPanel = new BottomPanel(getContext());
-        final ButtonCapture buttonCapture = new ButtonCapture(getContext());
-        buttonChange = new ButtonChange(getContext());
+        final BottomPanel bottomPanel = new BottomPanel(context);
+        final ButtonCapture buttonCapture = new ButtonCapture(context);
+        buttonChange = new ButtonChange(context);
 
         confirmationPanel.setVisibility(INVISIBLE);
         photoPreview.setVisibility(INVISIBLE);
@@ -152,21 +154,16 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
         declineButtonParams.bottomMargin = dp(25);
         declineButtonParams.leftMargin = dp(32);
 
-        flashButtonOn.setVisibility(INVISIBLE);
-        flashButtonOff.setVisibility(INVISIBLE);
+        flashButtonOn.hide();
+        flashButtonOff.hide();
         buttonPlay.setVisibility(INVISIBLE);
         videoView.setVisibility(INVISIBLE);
 
         flashButtonAuto.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                flashButtonOn.setVisibility(VISIBLE);
-                flashButtonAuto.getSpringOpacity().setEndValue(0);
-                flashButtonAuto.getSpringFlashAuto().setEndValue(200);
-                flashButtonOn.getSpringFlashOn().setEndValue(100);
-                flashButtonOn.getSpringOpacity().setEndValue(255);
-                flashButtonOff.getSpringFlashOff().setEndValue(0);
-                flashButtonAuto.setVisibility(INVISIBLE);
+                flashButtonAuto.hide();
+                flashButtonOn.show();
                 flashModeAuto = false;
                 flashModeOn = true;
                 flashModeOff = false;
@@ -176,13 +173,8 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
         flashButtonOn.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                flashButtonOff.setVisibility(VISIBLE);
-                flashButtonOn.getSpringOpacity().setEndValue(0);
-                flashButtonOn.getSpringFlashOn().setEndValue(200);
-                flashButtonOff.getSpringFlashOff().setEndValue(100);
-                flashButtonOff.getSpringOpacity().setEndValue(255);
-                flashButtonAuto.getSpringFlashAuto().setEndValue(0);
-                flashButtonOn.setVisibility(INVISIBLE);
+                flashButtonOn.hide();
+                flashButtonOff.show();
                 flashModeOn = false;
                 flashModeAuto = false;
                 flashModeOff = true;
@@ -192,13 +184,8 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
         flashButtonOff.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                flashButtonAuto.setVisibility(VISIBLE);
-                flashButtonOff.getSpringOpacity().setEndValue(0);
-                flashButtonOff.getSpringFlashOff().setEndValue(200);
-                flashButtonAuto.getSpringFlashAuto().setEndValue(100);
-                flashButtonAuto.getSpringOpacity().setEndValue(255);
-                flashButtonOn.getSpringFlashOn().setEndValue(0);
-                flashButtonOff.setVisibility(INVISIBLE);
+                flashButtonOff.hide();
+                flashButtonAuto.show();
                 flashModeOn = false;
                 flashModeAuto = true;
                 flashModeOff = false;

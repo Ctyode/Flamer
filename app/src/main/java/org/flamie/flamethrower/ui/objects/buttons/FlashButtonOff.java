@@ -15,6 +15,8 @@ import org.flamie.flamethrower.R;
 
 public class FlashButtonOff extends View implements SpringListener {
 
+    private boolean visible;
+
     private SpringSystem mSpringSystemIcon;
     private Spring mSpringFlashOff;
     private final Drawable flashDrawableOff;
@@ -24,6 +26,8 @@ public class FlashButtonOff extends View implements SpringListener {
 
     public FlashButtonOff(Context context) {
         super(context);
+        visible = false;
+
         mSpringSystemIcon = SpringSystem.create();
         mSpringFlashOff = mSpringSystemIcon.createSpring();
         mSpringFlashOff.addListener(this);
@@ -35,11 +39,11 @@ public class FlashButtonOff extends View implements SpringListener {
         flashDrawableOff = ContextCompat.getDrawable(getContext(), R.drawable.flash_off);
         flashDrawableOff.setBounds(0, 0, flashDrawableOff.getIntrinsicWidth(), flashDrawableOff.getIntrinsicHeight());
 
-        mSpringFlashOff.setEndValue(0);
+        mSpringFlashOff.setCurrentValue(0);
         mSpringOpacity.setEndValue(0);
 
-        mSpringOpacity.setSpringConfig(new SpringConfig(100, 40));
-        mSpringFlashOff.setSpringConfig(new SpringConfig(100, 40));
+        mSpringOpacity.setSpringConfig(new SpringConfig(230, 30));
+        mSpringFlashOff.setSpringConfig(new SpringConfig(230, 30));
     }
 
     @Override
@@ -57,10 +61,20 @@ public class FlashButtonOff extends View implements SpringListener {
     }
 
     @Override
-    public void onSpringAtRest(Spring spring) {}
+    public void onSpringAtRest(Spring spring) {
+        if(!visible) {
+            setVisibility(INVISIBLE);
+            mSpringFlashOff.setEndValue(0);
+            mSpringFlashOff.setCurrentValue(0);
+        }
+    }
 
     @Override
-    public void onSpringActivate(Spring spring) {}
+    public void onSpringActivate(Spring spring) {
+        if(visible) {
+            setVisibility(VISIBLE);
+        }
+    }
 
     @Override
     public void onSpringEndStateChange(Spring spring) {}
@@ -72,11 +86,16 @@ public class FlashButtonOff extends View implements SpringListener {
         }
     }
 
-    public Spring getSpringFlashOff() {
-        return mSpringFlashOff;
+    public void hide() {
+        mSpringOpacity.setEndValue(0);
+        mSpringFlashOff.setEndValue(200);
+        visible = false;
     }
 
-    public Spring getSpringOpacity() {
-        return mSpringOpacity;
+    public void show() {
+        mSpringOpacity.setEndValue(255);
+        mSpringFlashOff.setEndValue(100);
+        visible = true;
     }
+
 }
