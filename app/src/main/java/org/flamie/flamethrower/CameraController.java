@@ -69,6 +69,22 @@ public class CameraController extends Thread implements Camera.PictureCallback {
         afterCameraCallbacks.add(afterCameraCallback);
     }
 
+    public void beforeUnlock(BeforeUnlockCallback beforeUnlockCallback) {
+        beforeUnlockCallbacks.add(beforeUnlockCallback);
+    }
+
+    public void afterUnlock(AfterUnlockCallback afterUnlockCallback) {
+        afterUnlockCallbacks.add(afterUnlockCallback);
+    }
+
+    public void beforeReconnect(BeforeReconnectCallback beforeReconnectCallback) {
+        beforeReconnectCallbacks.add(beforeReconnectCallback);
+    }
+
+    public void afterReconnect(AfterReconnectCallback afterReconnectCallback) {
+        afterReconnectCallbacks.add(afterReconnectCallback);
+    }
+
     public void onPicture(Camera.PictureCallback pictureCallback) {
         onPictureCallbacks.add(pictureCallback);
     }

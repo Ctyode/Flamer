@@ -7,9 +7,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.hardware.Camera;
-import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -17,6 +15,7 @@ import android.widget.VideoView;
 
 import org.flamie.flamethrower.CameraController;
 import org.flamie.flamethrower.Flamethrower;
+import org.flamie.flamethrower.MediaRecorderController;
 import org.flamie.flamethrower.OnSwipeTouchListener;
 import org.flamie.flamethrower.ui.objects.BottomPanel;
 import org.flamie.flamethrower.ui.objects.buttons.ButtonAccept;
@@ -31,7 +30,6 @@ import org.flamie.flamethrower.util.ImageSaveUtils;
 import org.flamie.flamethrower.util.PreviewUtils;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 
 import static org.flamie.flamethrower.util.DimenUtils.dp;
 
@@ -46,6 +44,8 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
     private Activity activity;
     private CameraPreview mPreview;
     private MediaRecorder mediaRecorder;
+    private MediaRecorderController mediaRecorderController;
+    private boolean captureCameraAfterCameraUnlock;
 
     private FlashButtonAuto flashButtonAuto;
     private FlashButtonOn flashButtonOn;
@@ -66,6 +66,8 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
     private ButtonPlay buttonPlay;
     private VideoView videoView;
     private ButtonChange buttonChange;
+//    private SeekBar seekBar;
+    private boolean blocked = false;
 
     public MainObjects(Context context, Activity activity, CameraController cameraController) {
         super(context);
@@ -74,6 +76,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
 
         mPreview = new CameraPreview(activity.getApplicationContext(), cameraController,
                                      activity.getWindowManager().getDefaultDisplay().getRotation());
+        mediaRecorderController = new MediaRecorderController(cameraController, mPreview);
         cameraController.onPicture(this);
         init();
     }
@@ -89,6 +92,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
         buttonAccept = new ButtonAccept(context);
         buttonDecline = new ButtonDecline(context);
         buttonPlay = new ButtonPlay(context);
+//        seekBar = new SeekBar(context);
         videoView = new VideoView(context);
         videoView.setZOrderMediaOverlay(true);
 
@@ -106,13 +110,15 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
         LayoutParams flashOnLayoutParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         LayoutParams flashOffLayoutParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         LayoutParams photoPreviewParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
-        final LayoutParams captureButtonParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        LayoutParams captureButtonParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         LayoutParams acceptButtonParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         LayoutParams declineButtonParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         LayoutParams buttonChangeParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         LayoutParams bottomPanelParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         LayoutParams previewParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
         LayoutParams playButtonParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+//        LayoutParams seekBarParams = new LayoutParams(LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+//        seekBar.setThumb(null);
 
         flashAutoLayoutParams.addRule(ALIGN_PARENT_RIGHT);
         flashAutoLayoutParams.addRule(ALIGN_PARENT_TOP);
@@ -196,9 +202,11 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
         buttonCapture.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                blocked = true;
                 if(videoMode) {
                     if(isRecording) {
-                        onClickStopRecord();
+                        mediaRecorderController.requireStopRecord();
+
                         buttonCapture.getSpringOuterX().setEndValue(130f);
                         buttonCapture.getSpringOuterY().setEndValue(100f);
                         buttonCapture.getSpringBigRecord().setEndValue(0f);
@@ -209,14 +217,22 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
                         buttonCapture.setVisibility(INVISIBLE);
                         buttonAccept.setVisibility(VISIBLE);
                         buttonDecline.setVisibility(VISIBLE);
-                        videoView.setVisibility(VISIBLE);
                         videoView.setVideoPath(ImageSaveUtils.mediaFile.getAbsolutePath());
                         videoView.setMediaController(null);
+                        isRecording = false;
+                        try {
+                            videoView.setVisibility(VISIBLE);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                         buttonAccept.show();
                         buttonDecline.show();
-                        isRecording = false;
                     } else {
-                        onClickStartRecord();
+                        mediaRecorderController.setOrientationHint(calculateRotation());
+                        mediaRecorderController.captureCameraAfterCameraUnlock();
+                        cameraController.requireCameraUnlock();
+                        mediaRecorderController.requireStartRecord();
+
                         buttonCapture.getSpringOuterX().setEndValue(0f);
                         buttonCapture.getSpringOuterY().setEndValue(0f);
                         buttonCapture.getSpringBigRecord().setEndValue(100f);
@@ -281,6 +297,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
                 photoPreview.setVisibility(INVISIBLE);
                 buttonAccept.setVisibility(INVISIBLE);
                 buttonDecline.setVisibility(INVISIBLE);
+                blocked = false;
             }
         });
 
@@ -305,26 +322,31 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
                 buttonChange.getSpringOpacity().setEndValue(255);
                 confirmationPanel.setVisibility(INVISIBLE);
                 photoPreview.setVisibility(INVISIBLE);
+                blocked = false;
             }
         });
 
         mPreview.setOnTouchListener(new OnSwipeTouchListener(activity) {
             public void onSwipeLeft() {
-                bottomPanel.getSpringOpacity().setEndValue(110);
-                buttonCapture.getSpringOuterX().setEndValue(130f);
-                buttonCapture.getSpringInner().setEndValue(0f);
-                buttonCapture.getSpringCentral().setEndValue(0f);
-                buttonCapture.getSpringSmallRecord().setEndValue(20f);
-                videoMode = true;
+                if(!blocked) {
+                    bottomPanel.getSpringOpacity().setEndValue(110);
+                    buttonCapture.getSpringOuterX().setEndValue(130f);
+                    buttonCapture.getSpringInner().setEndValue(0f);
+                    buttonCapture.getSpringCentral().setEndValue(0f);
+                    buttonCapture.getSpringSmallRecord().setEndValue(20f);
+                    videoMode = true;
+                }
             }
 
             public void onSwipeRight() {
-                bottomPanel.getSpringOpacity().setEndValue(255);
-                buttonCapture.getSpringOuterX().setEndValue(100f);
-                buttonCapture.getSpringInner().setEndValue(90f);
-                buttonCapture.getSpringCentral().setEndValue(60f);
-                buttonCapture.getSpringSmallRecord().setEndValue(0f);
-                videoMode = false;
+                if(!blocked) {
+                    bottomPanel.getSpringOpacity().setEndValue(255);
+                    buttonCapture.getSpringOuterX().setEndValue(100f);
+                    buttonCapture.getSpringInner().setEndValue(90f);
+                    buttonCapture.getSpringCentral().setEndValue(60f);
+                    buttonCapture.getSpringSmallRecord().setEndValue(0f);
+                    videoMode = false;
+                }
             }
         });
 
@@ -341,6 +363,29 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
             }
         });
 
+//        videoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+//            @Override
+//            public void onPrepared(MediaPlayer mp) {
+//                seekBar.setMax(videoView.getDuration());
+//                seekBar.postDelayed(onEverySecond, 1000);
+//            }
+//        });
+//
+//        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+//
+//            @Override
+//            public void onStopTrackingTouch(SeekBar seekBar) {}
+//
+//            @Override
+//            public void onStartTrackingTouch(SeekBar seekBar) {}
+//
+//            @Override
+//            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+//                if(fromUser) {
+//                    videoView.seekTo(progress);
+//                }
+//            }
+//        });
 
         flashButtonAuto.setLayoutParams(flashAutoLayoutParams);
         flashButtonOn.setLayoutParams(flashOnLayoutParams);
@@ -354,6 +399,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
         buttonChange.setLayoutParams(buttonChangeParams);
         buttonPlay.setLayoutParams(playButtonParams);
         videoView.setLayoutParams(photoPreviewParams);
+//        seekBar.setLayoutParams(seekBarParams);
         setLayoutParams(previewParams);
 
         addView(mPreview);
@@ -370,7 +416,22 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
         addView(buttonAccept);
         addView(buttonDecline);
         addView(buttonPlay);
+//        addView(seekBar);
     }
+//
+//    private Runnable onEverySecond = new Runnable() {
+//        @Override
+//        public void run() {
+//            if(seekBar != null) {
+//                seekBar.setProgress(videoView.getCurrentPosition());
+//            }
+//
+//            if(videoView.isPlaying()) {
+//                seekBar.postDelayed(onEverySecond, 1000);
+//            }
+//
+//        }
+//    };
 
     @Override
     public void onPictureTaken(byte[] data, Camera camera) {
@@ -405,66 +466,16 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
         buttonChange.getSpringOpacity().setEndValue(0);
         buttonAccept.show();
         buttonDecline.show();
+        blocked = true;
     }
 
-    public void onClickStartRecord() {
-        if (prepareVideoRecorder()) {
-            mediaRecorder.start();
-            isRecording = true;
-        } else {
-            releaseMediaRecorder();
-        }
-    }
-
-    public void onClickStopRecord() {
-        if (mediaRecorder != null) {
-            mediaRecorder.stop();
-            cameraController.getCamera().stopPreview();
-            cameraController.requireCameraReconnect();
-            isRecording = false;
-            releaseMediaRecorder();
-        }
-    }
-
-    private boolean prepareVideoRecorder() {
-        cameraController.getCamera().setDisplayOrientation(PreviewUtils.cameraRotation(cameraController.getCameraInfo(),
-                                                           activity.getWindowManager().getDefaultDisplay().getRotation()));
-        mediaRecorder = new MediaRecorder();
-        cameraController.requireCameraUnlock();
-        mediaRecorder.setCamera(cameraController.getCamera());
-        mediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
-        mediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
-        mediaRecorder.setProfile(CamcorderProfile.get(cameraController.getCameraId(), CamcorderProfile.QUALITY_HIGH));
-        mediaRecorder.setOutputFile(ImageSaveUtils.getOutputMediaFile(2).toString());
-        mediaRecorder.setPreviewDisplay(mPreview.getHolder().getSurface());
-
+    private int calculateRotation() {
+        int rotation = PreviewUtils.cameraRotation(cameraController.getCameraInfo(),
+                     activity.getWindowManager().getDefaultDisplay().getRotation());
         if(cameraController.getCameraInfo().facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
-            mediaRecorder.setOrientationHint(PreviewUtils.cameraRotation(cameraController.getCameraInfo(),
-                                             activity.getWindowManager().getDefaultDisplay().getRotation()) + 180);
+            return rotation + 180;
         } else {
-            mediaRecorder.setOrientationHint(PreviewUtils.cameraRotation(cameraController.getCameraInfo(),
-                                             activity.getWindowManager().getDefaultDisplay().getRotation()));
-        }
-        try {
-            mediaRecorder.prepare();
-        } catch (IllegalStateException e) {
-            Log.d(TAG, "IllegalStateException preparing MediaRecorder: " + e.getMessage());
-            releaseMediaRecorder();
-            return false;
-        } catch (IOException e) {
-            Log.d(TAG, "IOException preparing MediaRecorder: " + e.getMessage());
-            releaseMediaRecorder();
-            return false;
-        }
-        return true;
-    }
-
-    private void releaseMediaRecorder() {
-        if (mediaRecorder != null) {
-            mediaRecorder.reset();
-            mediaRecorder.release();
-            mediaRecorder = null;
-            cameraController.requireCameraUnlock();
+            return rotation;
         }
     }
 
