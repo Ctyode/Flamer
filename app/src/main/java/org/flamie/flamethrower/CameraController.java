@@ -1,12 +1,18 @@
 package org.flamie.flamethrower;
 
 import android.hardware.Camera;
+import android.media.CamcorderProfile;
+import android.media.MediaRecorder;
+import android.os.FileObserver;
+
+import org.flamie.flamethrower.ui.CameraPreview;
+import org.flamie.flamethrower.util.ImageSaveUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CameraController extends Thread implements Camera.PictureCallback {
+public class CameraController extends Thread implements Camera.PictureCallback, VideoFileCallback {
 
     public interface BeforeCameraCallback {
         void beforeCamera(Camera camera);
@@ -32,6 +38,22 @@ public class CameraController extends Thread implements Camera.PictureCallback {
         void afterReconnect(Camera camera);
     }
 
+    private class VideoFileObserver extends FileObserver {
+
+        private VideoFileCallback callback;
+
+        public VideoFileObserver(String path, VideoFileCallback callback) {
+            super(path, FileObserver.CLOSE_WRITE);
+            this.callback = callback;
+        }
+
+        @Override
+        public void onEvent(int event, String path) {
+            callback.videoFile(path);
+        }
+
+    }
+
     private List<BeforeCameraCallback> beforeCameraCallbacks;
     private List<AfterCameraCallback> afterCameraCallbacks;
     private List<Camera.PictureCallback> onPictureCallbacks;
@@ -46,9 +68,16 @@ public class CameraController extends Thread implements Camera.PictureCallback {
     private boolean cameraPictureRequired = false;
     private boolean cameraUnlockRequired = false;
     private boolean cameraReconnectRequired = false;
+    private boolean recordStartRequired = false;
+    private boolean stopRecordRequired = false;
 
+    private VideoFileCallback videoFileCallback;
+    private VideoFileObserver observer;
+    private CameraPreview mPreview;
+    private MediaRecorder mediaRecorder;
     private Camera mCamera;
     private Camera.CameraInfo cameraInfo;
+    private int orientationHint;
     private int cameraId;
 
     public CameraController() {
@@ -67,22 +96,6 @@ public class CameraController extends Thread implements Camera.PictureCallback {
 
     public void afterCamera(AfterCameraCallback afterCameraCallback) {
         afterCameraCallbacks.add(afterCameraCallback);
-    }
-
-    public void beforeUnlock(BeforeUnlockCallback beforeUnlockCallback) {
-        beforeUnlockCallbacks.add(beforeUnlockCallback);
-    }
-
-    public void afterUnlock(AfterUnlockCallback afterUnlockCallback) {
-        afterUnlockCallbacks.add(afterUnlockCallback);
-    }
-
-    public void beforeReconnect(BeforeReconnectCallback beforeReconnectCallback) {
-        beforeReconnectCallbacks.add(beforeReconnectCallback);
-    }
-
-    public void afterReconnect(AfterReconnectCallback afterReconnectCallback) {
-        afterReconnectCallbacks.add(afterReconnectCallback);
     }
 
     public void onPicture(Camera.PictureCallback pictureCallback) {
@@ -105,13 +118,14 @@ public class CameraController extends Thread implements Camera.PictureCallback {
         cameraPictureRequired = true;
     }
 
-    public void requireCameraUnlock() {
-        cameraUnlockRequired = true;
+    public void requireStartRecord() {
+        recordStartRequired = true;
     }
 
-    public void requireCameraReconnect() {
-        cameraReconnectRequired = true;
+    public void requireStopRecord() {
+        stopRecordRequired = true;
     }
+
 
     @Override
     public void run() {
@@ -136,6 +150,12 @@ public class CameraController extends Thread implements Camera.PictureCallback {
                 } else if(cameraReconnectRequired) {
                     reconnectCamera();
                     cameraReconnectRequired = false;
+                } else if(recordStartRequired) {
+                    startRecord();
+                    recordStartRequired = false;
+                } else if(stopRecordRequired) {
+                    stopRecord();
+                    stopRecordRequired = false;
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -221,8 +241,72 @@ public class CameraController extends Thread implements Camera.PictureCallback {
         }
     }
 
+    private void startRecord() {
+        if (prepareVideoRecorder()) {
+            mediaRecorder.start();
+        } else {
+            releaseMediaRecorder();
+        }
+    }
+
+    private void stopRecord() {
+        if (mediaRecorder != null) {
+            mediaRecorder.stop();
+            mCamera.stopPreview();
+            reconnectCamera();
+            releaseMediaRecorder();
+        }
+    }
+
+    private void releaseMediaRecorder() {
+        if (mediaRecorder != null) {
+            mediaRecorder.reset();
+            mediaRecorder.release();
+            mediaRecorder = null;
+            unlockCamera();
+        }
+    }
+
+    public boolean prepareVideoRecorder() {
+        mediaRecorder = new MediaRecorder();
+        unlockCamera();
+        mediaRecorder.setCamera(mCamera);
+        mediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
+        mediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
+        mediaRecorder.setProfile(CamcorderProfile.get(getCameraId(), CamcorderProfile.QUALITY_HIGH));
+        mediaRecorder.setOutputFile(ImageSaveUtils.getOutputMediaFile(2).toString());
+        mediaRecorder.setPreviewDisplay(mPreview.getHolder().getSurface());
+        mediaRecorder.setOrientationHint(orientationHint);
+        try {
+            mediaRecorder.prepare();
+        } catch (IllegalStateException e) {
+            releaseMediaRecorder();
+            return false;
+        } catch (IOException e) {
+            releaseMediaRecorder();
+            return false;
+        }
+        observer = new VideoFileObserver(ImageSaveUtils.mediaFile.getAbsolutePath(), this);
+        observer.startWatching();
+        return true;
+    }
+
+
     private void takePicture() {
         mCamera.takePicture(null, null, this);
+    }
+
+    @Override
+    public void onPictureTaken(byte[] data, Camera camera) {
+        for (Camera.PictureCallback onPictureCallback : onPictureCallbacks) {
+            onPictureCallback.onPictureTaken(data, camera);
+        }
+    }
+
+    @Override
+    public void videoFile(String path) {
+        observer.stopWatching();
+        videoFileCallback.videoFile(path);
     }
 
     public Camera getCamera() {
@@ -237,11 +321,16 @@ public class CameraController extends Thread implements Camera.PictureCallback {
         return cameraInfo;
     }
 
-    @Override
-    public void onPictureTaken(byte[] data, Camera camera) {
-        for (Camera.PictureCallback onPictureCallback : onPictureCallbacks) {
-            onPictureCallback.onPictureTaken(data, camera);
-        }
+    public void setOrientationHint(int rotation) {
+        this.orientationHint = rotation;
+    }
+
+    public void setPreview(CameraPreview mPreview) {
+        this.mPreview = mPreview;
+    }
+
+    public void setVideoFileCallback(VideoFileCallback videoFileCallback) {
+        this.videoFileCallback = videoFileCallback;
     }
 
 }

@@ -7,16 +7,14 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.hardware.Camera;
-import android.media.MediaRecorder;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.VideoView;
 
 import org.flamie.flamethrower.CameraController;
-import org.flamie.flamethrower.Flamethrower;
-import org.flamie.flamethrower.MediaRecorderController;
 import org.flamie.flamethrower.OnSwipeTouchListener;
+import org.flamie.flamethrower.VideoFileCallback;
 import org.flamie.flamethrower.ui.objects.BottomPanel;
 import org.flamie.flamethrower.ui.objects.buttons.ButtonAccept;
 import org.flamie.flamethrower.ui.objects.buttons.ButtonCapture;
@@ -33,7 +31,7 @@ import java.io.ByteArrayOutputStream;
 
 import static org.flamie.flamethrower.util.DimenUtils.dp;
 
-public class MainObjects extends RelativeLayout implements Camera.PictureCallback {
+public class MainObjects extends RelativeLayout implements Camera.PictureCallback, VideoFileCallback {
 
     // TODO: исправить дерьмовую архитектуру, утечки памяти, убиться и не кодить никогда больше
 
@@ -43,9 +41,6 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
     private CameraController cameraController;
     private Activity activity;
     private CameraPreview mPreview;
-    private MediaRecorder mediaRecorder;
-    private MediaRecorderController mediaRecorderController;
-    private boolean captureCameraAfterCameraUnlock;
 
     private FlashButtonAuto flashButtonAuto;
     private FlashButtonOn flashButtonOn;
@@ -69,20 +64,19 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
 //    private SeekBar seekBar;
     private boolean blocked = false;
 
-    public MainObjects(Context context, Activity activity, CameraController cameraController) {
+    public MainObjects(Context context, Activity activity, CameraController cameraController, CameraPreview cameraPreview) {
         super(context);
         this.activity = activity;
         this.cameraController = cameraController;
+        this.mPreview = cameraPreview;
 
-        mPreview = new CameraPreview(activity.getApplicationContext(), cameraController,
-                                     activity.getWindowManager().getDefaultDisplay().getRotation());
-        mediaRecorderController = new MediaRecorderController(cameraController, mPreview);
+        cameraController.setVideoFileCallback(this);
         cameraController.onPicture(this);
         init();
     }
 
     private void init() {
-        Context context = Flamethrower.getContext();
+        Context context = activity.getApplication().getApplicationContext();
         flashButtonAuto = new FlashButtonAuto(context);
         flashButtonOn = new FlashButtonOn(context);
         flashButtonOff = new FlashButtonOff(context);
@@ -93,7 +87,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
         buttonDecline = new ButtonDecline(context);
         buttonPlay = new ButtonPlay(context);
 //        seekBar = new SeekBar(context);
-        videoView = new VideoView(context);
+        videoView = new VideoView(activity);
         videoView.setZOrderMediaOverlay(true);
 
         final BottomPanel bottomPanel = new BottomPanel(context);
@@ -205,7 +199,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
                 blocked = true;
                 if(videoMode) {
                     if(isRecording) {
-                        mediaRecorderController.requireStopRecord();
+                        cameraController.requireStopRecord();
 
                         buttonCapture.getSpringOuterX().setEndValue(130f);
                         buttonCapture.getSpringOuterY().setEndValue(100f);
@@ -217,21 +211,13 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
                         buttonCapture.setVisibility(INVISIBLE);
                         buttonAccept.setVisibility(VISIBLE);
                         buttonDecline.setVisibility(VISIBLE);
-                        videoView.setVideoPath(ImageSaveUtils.mediaFile.getAbsolutePath());
-                        videoView.setMediaController(null);
-                        isRecording = false;
-                        try {
-                            videoView.setVisibility(VISIBLE);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
                         buttonAccept.show();
                         buttonDecline.show();
+                        isRecording = false;
                     } else {
-                        mediaRecorderController.setOrientationHint(calculateRotation());
-                        mediaRecorderController.captureCameraAfterCameraUnlock();
-                        cameraController.requireCameraUnlock();
-                        mediaRecorderController.requireStartRecord();
+                        cameraController.setOrientationHint(calculateRotation());
+//                        cameraController.requireCameraUnlock();
+                        cameraController.requireStartRecord();
 
                         buttonCapture.getSpringOuterX().setEndValue(0f);
                         buttonCapture.getSpringOuterY().setEndValue(0f);
@@ -316,10 +302,10 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
                     newBitmap.recycle();
                     System.gc();
                 }
+
                 cameraController.getCamera().startPreview();
                 buttonAccept.hide();
                 buttonDecline.hide();
-                buttonChange.getSpringOpacity().setEndValue(255);
                 confirmationPanel.setVisibility(INVISIBLE);
                 photoPreview.setVisibility(INVISIBLE);
                 blocked = false;
@@ -463,7 +449,6 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
         buttonAccept.setVisibility(VISIBLE);
         buttonDecline.setVisibility(VISIBLE);
 
-        buttonChange.getSpringOpacity().setEndValue(0);
         buttonAccept.show();
         buttonDecline.show();
         blocked = true;
@@ -477,6 +462,18 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
         } else {
             return rotation;
         }
+    }
+
+    @Override
+    public void videoFile(String path) {
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                videoView.setVideoPath(ImageSaveUtils.mediaFile.getAbsolutePath());
+                videoView.setMediaController(null);
+                videoView.setVisibility(VISIBLE);
+            }
+        });
     }
 
 }

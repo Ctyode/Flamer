@@ -9,7 +9,6 @@ import android.support.v4.content.ContextCompat;
 import android.view.View;
 
 import com.facebook.rebound.Spring;
-import com.facebook.rebound.SpringConfig;
 import com.facebook.rebound.SpringListener;
 import com.facebook.rebound.SpringSystem;
 
@@ -29,8 +28,6 @@ public class ButtonChange extends View implements SpringListener {
     private Spring mSpringStroke;
     private SpringSystem springSystemRadius;
     private Spring mSpringRadius;
-    private SpringSystem springSystemOpacity;
-    private Spring mSpringOpacity;
 
     public ButtonChange(Context context) {
         super(context);
@@ -46,10 +43,6 @@ public class ButtonChange extends View implements SpringListener {
         mSpringRadius = springSystemRadius.createSpring();
         mSpringRadius.addListener(this);
 
-        springSystemOpacity = SpringSystem.create();
-        mSpringOpacity = springSystemOpacity.createSpring();
-        mSpringOpacity.addListener(this);
-
         circlePaint = new Paint();
         circlePaint.setAntiAlias(true);
         circlePaint.setStyle(Paint.Style.STROKE);
@@ -61,9 +54,6 @@ public class ButtonChange extends View implements SpringListener {
 
         switchDrawable = ContextCompat.getDrawable(getContext(), R.drawable.switcher);
         switchDrawable.setBounds(0, 0, switchDrawable.getIntrinsicWidth(), switchDrawable.getIntrinsicHeight());
-
-        mSpringOpacity.setSpringConfig(new SpringConfig(210, 30));
-        mSpringOpacity.setCurrentValue(255);
     }
 
     @Override
@@ -81,13 +71,11 @@ public class ButtonChange extends View implements SpringListener {
 
     @Override
     public void onSpringUpdate(Spring spring) {
-        int valueOpacity = (int) mSpringOpacity.getCurrentValue();
         float valueRotate = (float) mSpringRotate.getCurrentValue();
         float valueStroke = (float) mSpringStroke.getCurrentValue();
         valueRadius = (float) mSpringRadius.getCurrentValue();
         setRotation(valueRotate);
         circlePaint.setStrokeWidth(valueStroke);
-        switchDrawable.setAlpha(valueOpacity);
         invalidate();
     }
 
@@ -112,7 +100,4 @@ public class ButtonChange extends View implements SpringListener {
         return mSpringRadius;
     }
 
-    public Spring getSpringOpacity() {
-        return mSpringOpacity;
-    }
 }
