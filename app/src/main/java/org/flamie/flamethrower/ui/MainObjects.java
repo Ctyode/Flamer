@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.hardware.Camera;
+import android.media.MediaPlayer;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -28,6 +29,7 @@ import org.flamie.flamethrower.util.ImageSaveUtils;
 import org.flamie.flamethrower.util.PreviewUtils;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 import static org.flamie.flamethrower.util.DimenUtils.dp;
 
@@ -200,6 +202,9 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
                 if(videoMode) {
                     if(isRecording) {
                         cameraController.requireStopRecord();
+                        cameraController.getMediaRecorder().setPreviewDisplay(null);
+                        cameraController.getCamera().stopPreview();
+
 
                         buttonCapture.getSpringOuterX().setEndValue(130f);
                         buttonCapture.getSpringOuterY().setEndValue(100f);
@@ -216,14 +221,13 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
                         isRecording = false;
                     } else {
                         cameraController.setOrientationHint(calculateRotation());
-//                        cameraController.requireCameraUnlock();
                         cameraController.requireStartRecord();
 
                         buttonCapture.getSpringOuterX().setEndValue(0f);
                         buttonCapture.getSpringOuterY().setEndValue(0f);
                         buttonCapture.getSpringBigRecord().setEndValue(100f);
                         buttonCapture.getSpringRectangleRecord().setEndValue(40f);
-                        bottomPanel.getSpringPositionY().setEndValue(350f);
+                        bottomPanel.getSpringPositionY().setEndValue(dp(115));
                         isRecording = true;
                     }
                 } else {
@@ -272,15 +276,17 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
                 if(videoMode) {
                     buttonPlay.setVisibility(INVISIBLE);
                     videoView.setVisibility(INVISIBLE);
+                    buttonCapture.setVisibility(VISIBLE);
+                    buttonChange.setVisibility(VISIBLE);
                 } else {
+                    ImageSaveUtils.saveImage(data);
                     bitmap.recycle();
                     newBitmap.recycle();
                     System.gc();
+                    confirmationPanel.setVisibility(INVISIBLE);
+                    photoPreview.setVisibility(INVISIBLE);
                 }
-                ImageSaveUtils.saveImage(data);
-                cameraController.getCamera().startPreview();
-                confirmationPanel.setVisibility(INVISIBLE);
-                photoPreview.setVisibility(INVISIBLE);
+                startPreview();
                 buttonAccept.setVisibility(INVISIBLE);
                 buttonDecline.setVisibility(INVISIBLE);
                 blocked = false;
@@ -301,13 +307,12 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
                     bitmap.recycle();
                     newBitmap.recycle();
                     System.gc();
+                    photoPreview.setVisibility(INVISIBLE);
+                    confirmationPanel.setVisibility(INVISIBLE);
                 }
-
-                cameraController.getCamera().startPreview();
+                startPreview();
                 buttonAccept.hide();
                 buttonDecline.hide();
-                confirmationPanel.setVisibility(INVISIBLE);
-                photoPreview.setVisibility(INVISIBLE);
                 blocked = false;
             }
         });
@@ -471,9 +476,24 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
             public void run() {
                 videoView.setVideoPath(ImageSaveUtils.mediaFile.getAbsolutePath());
                 videoView.setMediaController(null);
+                videoView.setOnErrorListener(new MediaPlayer.OnErrorListener() {
+                    @Override
+                    public boolean onError(MediaPlayer mp, int what, int extra) {
+                        return true;
+                    }
+                });
                 videoView.setVisibility(VISIBLE);
             }
         });
+    }
+
+    public void startPreview() {
+        try {
+            cameraController.getCamera().reconnect();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        cameraController.getCamera().startPreview();
     }
 
 }

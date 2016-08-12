@@ -36,13 +36,13 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         try {
             if(camera != null) {
                 camera.setPreviewDisplay(getHolder());
-                Camera.Parameters parameters = camera.getParameters();
-                sizes = parameters.getSupportedPreviewSizes();
-                if(sizes != null) {
-                    size = PreviewUtils.getOptimalPreviewSize(sizes, getWidth(), getHeight());
-                }
-                parameters.setPreviewSize(size.width, size.height);
-                camera.setParameters(parameters);
+//                Camera.Parameters parameters = camera.getParameters();
+//                sizes = parameters.getSupportedPreviewSizes();
+//                if(sizes != null) {
+//                    size = PreviewUtils.getOptimalPreviewSize(sizes, getWidth(), getHeight());
+//                }
+//                parameters.setPreviewSize(size.width, size.height);
+//                camera.setParameters(parameters);
                 camera.startPreview();
                 camera.setDisplayOrientation(PreviewUtils.cameraRotation(cameraController.getCameraInfo(),
                                                                          displayRotation));
@@ -66,6 +66,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         try {
             Camera camera = cameraController.getCamera();
             if(camera != null) {
+                holder.addCallback(this);
                 camera.setPreviewDisplay(getHolder());
                 camera.startPreview();
             }

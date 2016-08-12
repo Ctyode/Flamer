@@ -250,11 +250,16 @@ public class CameraController extends Thread implements Camera.PictureCallback, 
     }
 
     private void stopRecord() {
-        if (mediaRecorder != null) {
-            mediaRecorder.stop();
-            mCamera.stopPreview();
-            reconnectCamera();
-            releaseMediaRecorder();
+        try {
+            if (mediaRecorder != null) {
+                mediaRecorder.stop();
+                mCamera.stopPreview();
+                reconnectCamera();
+                releaseMediaRecorder();
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -280,9 +285,11 @@ public class CameraController extends Thread implements Camera.PictureCallback, 
         try {
             mediaRecorder.prepare();
         } catch (IllegalStateException e) {
+            e.printStackTrace();
             releaseMediaRecorder();
             return false;
         } catch (IOException e) {
+            e.printStackTrace();
             releaseMediaRecorder();
             return false;
         }
@@ -290,7 +297,6 @@ public class CameraController extends Thread implements Camera.PictureCallback, 
         observer.startWatching();
         return true;
     }
-
 
     private void takePicture() {
         mCamera.takePicture(null, null, this);
@@ -311,6 +317,10 @@ public class CameraController extends Thread implements Camera.PictureCallback, 
 
     public Camera getCamera() {
         return mCamera;
+    }
+
+    public MediaRecorder getMediaRecorder() {
+        return mediaRecorder;
     }
 
     public int getCameraId() {

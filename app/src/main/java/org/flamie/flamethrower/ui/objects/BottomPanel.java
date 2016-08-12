@@ -12,6 +12,8 @@ import com.facebook.rebound.SpringConfig;
 import com.facebook.rebound.SpringListener;
 import com.facebook.rebound.SpringSystem;
 
+import static org.flamie.flamethrower.util.DimenUtils.dp;
+
 public class BottomPanel extends View implements SpringListener {
 
     private SpringSystem mSpringSystemOpacity;
@@ -48,7 +50,7 @@ public class BottomPanel extends View implements SpringListener {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        panelBackground.set(0, 1400 + positionY, getWidth(), getHeight() + positionY);
+        panelBackground.set(0, dp(465) + positionY, getWidth(), getHeight() + positionY);
         canvas.drawRect(panelBackground, panelBackgroundPaint);
     }
 
