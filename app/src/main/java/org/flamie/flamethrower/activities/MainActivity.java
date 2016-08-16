@@ -20,7 +20,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         DimenUtils.init(getApplicationContext());
         cameraController = new CameraController();
-
         mPreview = new CameraPreview(this.getApplicationContext(), cameraController,
                 this.getWindowManager().getDefaultDisplay().getRotation());
         cameraController.setPreview(mPreview);
@@ -43,5 +42,7 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
         cameraController.requireCameraRelease();
     }
+
+
 
 }

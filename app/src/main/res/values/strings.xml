@@ -5,4 +5,7 @@
     <string name="cam_permission_request">This app are really need an access to camera. It\'s a camera app!</string>
     <string name="mic_permission_request">This app are really need an access to microphone, so it will be able to record a video.</string>
     <string name="storage_permission_request">To save photos and videos, please allow an access to storage in settings.</string>
+    <string name="cancel_text">CANCEL</string>
+    <string name="reset_text">RESET</string>
+    <string name="done_text">DONE</string>
 </resources>

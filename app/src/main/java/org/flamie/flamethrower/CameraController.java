@@ -309,12 +309,6 @@ public class CameraController extends Thread implements Camera.PictureCallback, 
         }
     }
 
-    @Override
-    public void videoFile(String path) {
-        observer.stopWatching();
-        videoFileCallback.videoFile(path);
-    }
-
     public Camera getCamera() {
         return mCamera;
     }
@@ -341,6 +335,12 @@ public class CameraController extends Thread implements Camera.PictureCallback, 
 
     public void setVideoFileCallback(VideoFileCallback videoFileCallback) {
         this.videoFileCallback = videoFileCallback;
+    }
+
+    @Override
+    public void videoFile(String path) {
+        observer.stopWatching();
+        videoFileCallback.videoFile(path);
     }
 
 }

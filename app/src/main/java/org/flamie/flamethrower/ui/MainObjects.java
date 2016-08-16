@@ -2,6 +2,7 @@ package org.flamie.flamethrower.ui;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -16,12 +17,14 @@ import android.widget.VideoView;
 import org.flamie.flamethrower.CameraController;
 import org.flamie.flamethrower.OnSwipeTouchListener;
 import org.flamie.flamethrower.VideoFileCallback;
+import org.flamie.flamethrower.activities.CropActivity;
 import org.flamie.flamethrower.ui.objects.BottomPanel;
 import org.flamie.flamethrower.ui.objects.buttons.ButtonAccept;
 import org.flamie.flamethrower.ui.objects.buttons.ButtonCapture;
 import org.flamie.flamethrower.ui.objects.buttons.ButtonChange;
 import org.flamie.flamethrower.ui.objects.buttons.ButtonDecline;
 import org.flamie.flamethrower.ui.objects.buttons.ButtonPlay;
+import org.flamie.flamethrower.ui.objects.buttons.CropButton;
 import org.flamie.flamethrower.ui.objects.buttons.FlashButtonAuto;
 import org.flamie.flamethrower.ui.objects.buttons.FlashButtonOff;
 import org.flamie.flamethrower.ui.objects.buttons.FlashButtonOn;
@@ -56,7 +59,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
     private boolean isFront = false;
     private boolean isPlaying = false;
     private Bitmap bitmap;
-    private Bitmap newBitmap;
+    private static Bitmap newBitmap;
     private boolean flashModeAuto = true;
     private boolean flashModeOn = false;
     private boolean flashModeOff = false;
@@ -65,6 +68,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
     private ButtonChange buttonChange;
 //    private SeekBar seekBar;
     private boolean blocked = false;
+    private CropButton cropButton;
 
     public MainObjects(Context context, Activity activity, CameraController cameraController, CameraPreview cameraPreview) {
         super(context);
@@ -78,7 +82,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
     }
 
     private void init() {
-        Context context = activity.getApplication().getApplicationContext();
+        final Context context = activity.getApplication().getApplicationContext();
         flashButtonAuto = new FlashButtonAuto(context);
         flashButtonOn = new FlashButtonOn(context);
         flashButtonOff = new FlashButtonOff(context);
@@ -91,6 +95,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
 //        seekBar = new SeekBar(context);
         videoView = new VideoView(activity);
         videoView.setZOrderMediaOverlay(true);
+        cropButton = new CropButton(context);
 
         final BottomPanel bottomPanel = new BottomPanel(context);
         final ButtonCapture buttonCapture = new ButtonCapture(context);
@@ -101,6 +106,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
         buttonAccept.setVisibility(INVISIBLE);
         buttonDecline.setVisibility(INVISIBLE);
         flashButtonOff.setVisibility(INVISIBLE);
+        cropButton.setVisibility(INVISIBLE);
 
         LayoutParams flashAutoLayoutParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         LayoutParams flashOnLayoutParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
@@ -113,6 +119,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
         LayoutParams bottomPanelParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         LayoutParams previewParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
         LayoutParams playButtonParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        LayoutParams cropButtonParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
 //        LayoutParams seekBarParams = new LayoutParams(LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 //        seekBar.setThumb(null);
 
@@ -135,6 +142,9 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
         playButtonParams.addRule(CENTER_HORIZONTAL);
         playButtonParams.bottomMargin = dp(30);
 
+        bottomPanelParams.addRule(ALIGN_PARENT_BOTTOM);
+        bottomPanelParams.addRule(CENTER_HORIZONTAL);
+
         photoPreviewParams.addRule(ALIGN_PARENT_TOP);
         photoPreview.setScaleType(ImageView.ScaleType.FIT_START);
         buttonChangeParams.addRule(ALIGN_PARENT_BOTTOM);
@@ -155,6 +165,10 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
         declineButtonParams.addRule(ALIGN_PARENT_LEFT);
         declineButtonParams.bottomMargin = dp(25);
         declineButtonParams.leftMargin = dp(32);
+
+        cropButtonParams.addRule(ALIGN_PARENT_BOTTOM);
+        cropButtonParams.addRule(CENTER_HORIZONTAL);
+        cropButtonParams.bottomMargin = dp(30);
 
         flashButtonOn.hide();
         flashButtonOff.hide();
@@ -204,7 +218,6 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
                         cameraController.requireStopRecord();
                         cameraController.getMediaRecorder().setPreviewDisplay(null);
                         cameraController.getCamera().stopPreview();
-
 
                         buttonCapture.getSpringOuterX().setEndValue(130f);
                         buttonCapture.getSpringOuterY().setEndValue(100f);
@@ -285,6 +298,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
                     System.gc();
                     confirmationPanel.setVisibility(INVISIBLE);
                     photoPreview.setVisibility(INVISIBLE);
+                    cropButton.setVisibility(INVISIBLE);
                 }
                 startPreview();
                 buttonAccept.setVisibility(INVISIBLE);
@@ -309,6 +323,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
                     System.gc();
                     photoPreview.setVisibility(INVISIBLE);
                     confirmationPanel.setVisibility(INVISIBLE);
+                    cropButton.setVisibility(INVISIBLE);
                 }
                 startPreview();
                 buttonAccept.hide();
@@ -354,6 +369,15 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
             }
         });
 
+        cropButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(activity, CropActivity.class);
+                activity.startActivity(intent);
+                System.out.println("ddsdsdsd");
+            }
+        });
+
 //        videoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
 //            @Override
 //            public void onPrepared(MediaPlayer mp) {
@@ -390,6 +414,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
         buttonChange.setLayoutParams(buttonChangeParams);
         buttonPlay.setLayoutParams(playButtonParams);
         videoView.setLayoutParams(photoPreviewParams);
+        cropButton.setLayoutParams(cropButtonParams);
 //        seekBar.setLayoutParams(seekBarParams);
         setLayoutParams(previewParams);
 
@@ -407,6 +432,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
         addView(buttonAccept);
         addView(buttonDecline);
         addView(buttonPlay);
+        addView(cropButton);
 //        addView(seekBar);
     }
 //
@@ -456,6 +482,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
 
         buttonAccept.show();
         buttonDecline.show();
+        cropButton.setVisibility(VISIBLE);
         blocked = true;
     }
 
@@ -496,4 +523,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
         cameraController.getCamera().startPreview();
     }
 
+    public static Bitmap getBitmap() {
+        return newBitmap;
+    }
 }
