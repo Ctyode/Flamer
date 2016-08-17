@@ -10,6 +10,7 @@ import android.widget.TextView;
 
 import org.flamie.flamethrower.R;
 import org.flamie.flamethrower.ui.objects.CropBottomPanel;
+import org.flamie.flamethrower.ui.objects.CropRectangle;
 
 import static org.flamie.flamethrower.util.DimenUtils.dp;
 
@@ -26,11 +27,14 @@ public class CropObjects extends RelativeLayout {
     public void init() {
         this.setBackgroundColor(Color.BLACK);
         final Context context = activity.getApplication().getApplicationContext();
-        CropBottomPanel cropBottomPanel = new CropBottomPanel(context);
+
         ImageView photoPreview = new ImageView(context);
+        CropBottomPanel cropBottomPanel = new CropBottomPanel(context);
         TextView cancelText = new TextView(context);
         TextView resetText = new TextView(context);
         TextView doneText = new TextView(context);
+        CropRectangle cropRectangle = new CropRectangle(context);
+
         photoPreview.setImageBitmap(MainObjects.getBitmap());
 
         cancelText.setText(R.string.cancel_text);
@@ -78,10 +82,13 @@ public class CropObjects extends RelativeLayout {
         doneText.setLayoutParams(doneTextParams);
 
         addView(photoPreview);
+        addView(cropRectangle);
         addView(cropBottomPanel);
         addView(cancelText);
         addView(resetText);
         addView(doneText);
     }
+
+
 
 }
