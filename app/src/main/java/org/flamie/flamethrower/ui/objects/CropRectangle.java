@@ -82,20 +82,20 @@ public class CropRectangle extends View {
     }
 
     public void currentCorner() {
-        if(x > cropRectangle.left && x < (cropRectangle.left + width / 2) &&
-           y > cropRectangle.top && y < (cropRectangle.top + height / 2)) {
+        if(x > cropRectangle.left && x < (cropRectangle.left + width / 3) &&
+           y > cropRectangle.top && y < (cropRectangle.top + height / 3)) {
             // top left
             currentCorner = 0;
-        } else if(x < cropRectangle.right && x > (cropRectangle.right - width / 2) &&
-                  y > cropRectangle.bottom && y > (cropRectangle.bottom - height / 2)) {
+        } else if(x < cropRectangle.right && x > (cropRectangle.right - width / 3) &&
+                  y > cropRectangle.bottom && y > (cropRectangle.bottom - height / 3)) {
             // bottom right
             currentCorner = 1;
-        } else if(x < cropRectangle.right && x > (cropRectangle.right - width / 2) &&
-                  y > cropRectangle.top && y < (cropRectangle.top + height / 2)) {
+        } else if(x < cropRectangle.right && x > (cropRectangle.right - width / 3) &&
+                  y > cropRectangle.top && y < (cropRectangle.top + height / 3)) {
             // top right
              currentCorner = 2;
-        } else if(x > cropRectangle.left && x < (cropRectangle.left + width / 2) &&
-                  y > cropRectangle.bottom && y > (cropRectangle.bottom - height / 2)) {
+        } else if(x > cropRectangle.left && x < (cropRectangle.left + width / 3) &&
+                  y > cropRectangle.bottom && y > (cropRectangle.bottom - height / 3)) {
             // bottom left
              currentCorner = 3;
         }
