@@ -38,9 +38,11 @@ public class CropObjects extends RelativeLayout {
         TextView resetText = new TextView(context);
         TextView doneText = new TextView(context);
         ButtonRotate buttonRotate = new ButtonRotate(context);
-        CropRectangle cropRectangle = new CropRectangle(context);
+        final CropRectangle cropRectangle = new CropRectangle(context);
         final Matrix matrix = new Matrix();
-
+//        final ImageView photoResult = new ImageView(context);
+//        photoResult.setBackgroundColor(Color.BLACK);
+//        photoResult.setVisibility(INVISIBLE);
 
         photoPreview.setImageBitmap(MainObjects.getBitmap());
 
@@ -48,7 +50,7 @@ public class CropObjects extends RelativeLayout {
         resetText.setText(R.string.reset_text);
         doneText.setText(R.string.done_text);
 
-        LayoutParams photoPreviewParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
+        final LayoutParams photoPreviewParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
         LayoutParams cancelTextParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         LayoutParams resetTextParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         LayoutParams doneTextParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
@@ -79,7 +81,7 @@ public class CropObjects extends RelativeLayout {
 
         buttonRotateParams.addRule(ALIGN_PARENT_BOTTOM);
         buttonRotateParams.addRule(ALIGN_PARENT_RIGHT);
-        buttonRotateParams.bottomMargin = dp(65);
+        buttonRotateParams.bottomMargin = dp(60);
         buttonRotateParams.rightMargin = dp(10);
 
         buttonRotate.setOnClickListener(new OnClickListener() {
@@ -99,6 +101,14 @@ public class CropObjects extends RelativeLayout {
             }
         });
 
+//        doneText.setOnClickListener(new OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                photoResult.setImageBitmap(cropRectangle.cropResult());
+//                photoResult.setVisibility(VISIBLE);
+//            }
+//        });
+
         photoPreview.setLayoutParams(photoPreviewParams);
         cancelText.setLayoutParams(cancelTextParams);
         resetText.setLayoutParams(resetTextParams);
@@ -112,6 +122,7 @@ public class CropObjects extends RelativeLayout {
         addView(resetText);
         addView(doneText);
         addView(buttonRotate);
+//        addView(photoResult);
     }
 
 
