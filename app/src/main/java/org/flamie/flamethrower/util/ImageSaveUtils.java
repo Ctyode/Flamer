@@ -3,6 +3,8 @@ package org.flamie.flamethrower.util;
 import android.os.Environment;
 import android.util.Log;
 
+import org.flamie.flamethrower.ui.MainObjects;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -54,6 +56,8 @@ public class ImageSaveUtils {
         } catch (IOException e) {
             Log.d(TAG, "Error accessing file: " + e.getMessage());
         }
+
+        MainObjects.safeToTakePicture = true;
     }
 
 

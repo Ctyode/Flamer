@@ -69,6 +69,9 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
 //    private SeekBar seekBar;
     private boolean blocked = false;
     private CropButton cropButton;
+    public static boolean safeToTakePicture = false;
+    private ButtonCapture buttonCapture;
+    private BottomPanel bottomPanel;
 
     public MainObjects(Context context, Activity activity, CameraController cameraController, CameraPreview cameraPreview) {
         super(context);
@@ -97,8 +100,14 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
         videoView.setZOrderMediaOverlay(true);
         cropButton = new CropButton(context);
 
-        final BottomPanel bottomPanel = new BottomPanel(context);
-        final ButtonCapture buttonCapture = new ButtonCapture(context);
+        bottomPanel = new BottomPanel(context);
+        buttonCapture = new ButtonCapture(context);
+        buttonCapture.setLongPressed(new Runnable() {
+            @Override
+            public void run() {
+                longTap();
+            }
+        });
         buttonChange = new ButtonChange(context);
 
         confirmationPanel.setVisibility(INVISIBLE);
@@ -219,11 +228,8 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
                         cameraController.getMediaRecorder().setPreviewDisplay(null);
                         cameraController.getCamera().stopPreview();
 
-                        buttonCapture.getSpringOuterX().setEndValue(130f);
-                        buttonCapture.getSpringOuterY().setEndValue(100f);
-                        buttonCapture.getSpringBigRecord().setEndValue(0f);
-                        buttonCapture.getSpringRectangleRecord().setEndValue(0f);
-                        bottomPanel.getSpringPositionY().setEndValue(0f);
+                        buttonCapture.transformToVideoFromStop();
+                        bottomPanel.getSpringPositionY().setEndValue(0);
                         buttonPlay.setVisibility(VISIBLE);
                         buttonChange.setVisibility(INVISIBLE);
                         buttonCapture.setVisibility(INVISIBLE);
@@ -236,10 +242,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
                         cameraController.setOrientationHint(calculateRotation());
                         cameraController.requireStartRecord();
 
-                        buttonCapture.getSpringOuterX().setEndValue(0f);
-                        buttonCapture.getSpringOuterY().setEndValue(0f);
-                        buttonCapture.getSpringBigRecord().setEndValue(100f);
-                        buttonCapture.getSpringRectangleRecord().setEndValue(40f);
+                        buttonCapture.transformToStop();
                         bottomPanel.getSpringPositionY().setEndValue(dp(115));
                         isRecording = true;
                     }
@@ -259,7 +262,10 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
                             cameraController.getCamera().setParameters(parameters);
                         }
                     }
-                    cameraController.requireCameraPicture();
+                    if(safeToTakePicture) {
+                        cameraController.requireCameraPicture();
+                        safeToTakePicture = false;
+                    }
                 }
             }
          });
@@ -304,6 +310,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
                 buttonAccept.setVisibility(INVISIBLE);
                 buttonDecline.setVisibility(INVISIBLE);
                 blocked = false;
+                safeToTakePicture = true;
             }
         });
 
@@ -329,6 +336,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
                 buttonAccept.hide();
                 buttonDecline.hide();
                 blocked = false;
+                safeToTakePicture = true;
             }
         });
 
@@ -336,10 +344,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
             public void onSwipeLeft() {
                 if(!blocked) {
                     bottomPanel.getSpringOpacity().setEndValue(110);
-                    buttonCapture.getSpringOuterX().setEndValue(130f);
-                    buttonCapture.getSpringInner().setEndValue(0f);
-                    buttonCapture.getSpringCentral().setEndValue(0f);
-                    buttonCapture.getSpringSmallRecord().setEndValue(20f);
+                    buttonCapture.transformToVideo();
                     videoMode = true;
                 }
             }
@@ -347,10 +352,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
             public void onSwipeRight() {
                 if(!blocked) {
                     bottomPanel.getSpringOpacity().setEndValue(255);
-                    buttonCapture.getSpringOuterX().setEndValue(100f);
-                    buttonCapture.getSpringInner().setEndValue(90f);
-                    buttonCapture.getSpringCentral().setEndValue(60f);
-                    buttonCapture.getSpringSmallRecord().setEndValue(0f);
+                    buttonCapture.transformToPhoto();
                     videoMode = false;
                 }
             }
@@ -374,7 +376,6 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
             public void onClick(View v) {
                 Intent intent = new Intent(activity, CropActivity.class);
                 activity.startActivity(intent);
-                System.out.println("ddsdsdsd");
             }
         });
 
@@ -521,6 +522,19 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
             e.printStackTrace();
         }
         cameraController.getCamera().startPreview();
+    }
+
+    public void longTap() {
+        cameraController.setOrientationHint(calculateRotation());
+        cameraController.requireStartRecord();
+
+//        buttonCapture.transformFromPhotoToStop();
+        buttonCapture.getSpringOuterX().setEndValue(0);
+        buttonCapture.getSpringOuterY().setEndValue(0);
+        buttonCapture.getSpringBigRecord().setEndValue(dp(35));
+        buttonCapture.getSpringRectangleRecord().setEndValue(40f);
+        bottomPanel.getSpringPositionY().setEndValue(dp(115));
+        isRecording = true;
     }
 
     public static Bitmap getBitmap() {

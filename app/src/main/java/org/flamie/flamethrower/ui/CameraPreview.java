@@ -44,6 +44,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                 parameters.setPreviewSize(size.width, size.height);
                 camera.setParameters(parameters);
                 camera.startPreview();
+                MainObjects.safeToTakePicture = true;
                 camera.setDisplayOrientation(PreviewUtils.cameraRotation(cameraController.getCameraInfo(),
                                                                          displayRotation));
             }
@@ -89,6 +90,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                 try {
                     camera.setPreviewDisplay(getHolder());
                     camera.startPreview();
+                    MainObjects.safeToTakePicture = true;
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

@@ -1,6 +1,7 @@
 package org.flamie.flamethrower.ui.objects;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -9,6 +10,7 @@ import android.graphics.RectF;
 import android.view.MotionEvent;
 import android.view.View;
 
+import org.flamie.flamethrower.ui.CropObjects;
 import org.flamie.flamethrower.ui.MainObjects;
 
 import static org.flamie.flamethrower.util.DimenUtils.dp;
@@ -88,7 +90,7 @@ public class CropRectangle extends View {
     }
 
     @Override
-    public boolean onTouchEvent (MotionEvent event) {
+    public boolean onTouchEvent(MotionEvent event) {
         switch (event.getAction()) {
             case MotionEvent.ACTION_MOVE:
                 x = event.getX();
@@ -106,22 +108,22 @@ public class CropRectangle extends View {
     }
 
     public void currentCorner() {
-        if(x > cropRectangle.left && x < (cropRectangle.left + width / 3) &&
-           y > cropRectangle.top && y < (cropRectangle.top + height / 3)) {
+        if (x > cropRectangle.left && x < (cropRectangle.left + width / 3) &&
+                y > cropRectangle.top && y < (cropRectangle.top + height / 3)) {
             // top left
             currentCorner = 0;
-        } else if(x < cropRectangle.right && x > (cropRectangle.right - width / 3) &&
-                  y < cropRectangle.bottom && y > (cropRectangle.bottom - height / 3)) {
+        } else if (x < cropRectangle.right && x > (cropRectangle.right - width / 3) &&
+                y < cropRectangle.bottom && y > (cropRectangle.bottom - height / 3)) {
             // bottom right
             currentCorner = 1;
-        } else if(x < cropRectangle.right && x > (cropRectangle.right - width / 3) &&
-                  y > cropRectangle.top && y < (cropRectangle.top + height / 3)) {
+        } else if (x < cropRectangle.right && x > (cropRectangle.right - width / 3) &&
+                y > cropRectangle.top && y < (cropRectangle.top + height / 3)) {
             // top right
-             currentCorner = 2;
-        } else if(x > cropRectangle.left && x < (cropRectangle.left + width / 3) &&
-                  y < cropRectangle.bottom && y > (cropRectangle.bottom - height / 3)) {
+            currentCorner = 2;
+        } else if (x > cropRectangle.left && x < (cropRectangle.left + width / 3) &&
+                y < cropRectangle.bottom && y > (cropRectangle.bottom - height / 3)) {
             // bottom left
-             currentCorner = 3;
+            currentCorner = 3;
         }
 
     }
@@ -172,16 +174,16 @@ public class CropRectangle extends View {
         corners.moveTo(cropRectangle.right + cornerStrokeWidth, cropRectangle.top - cornerStrokeWidth);
         corners.rLineTo(0, cornerSize);
         corners.rLineTo(-cornerStrokeWidth, 0);
-        corners.rLineTo(0, cornerStrokeWidth-cornerSize);
-        corners.rLineTo(cornerStrokeWidth-cornerSize, 0);
+        corners.rLineTo(0, cornerStrokeWidth - cornerSize);
+        corners.rLineTo(cornerStrokeWidth - cornerSize, 0);
         corners.rLineTo(0, -cornerStrokeWidth);
         corners.close();
 
         corners.moveTo(cropRectangle.right + cornerStrokeWidth, cropRectangle.bottom + cornerStrokeWidth);
         corners.rLineTo(-cornerSize, 0);
         corners.rLineTo(0, -cornerStrokeWidth);
-        corners.rLineTo(cornerSize-cornerStrokeWidth, 0);
-        corners.rLineTo(0, cornerStrokeWidth-cornerSize);
+        corners.rLineTo(cornerSize - cornerStrokeWidth, 0);
+        corners.rLineTo(0, cornerStrokeWidth - cornerSize);
         corners.rLineTo(cornerStrokeWidth, 0);
         corners.close();
 
@@ -194,12 +196,14 @@ public class CropRectangle extends View {
         corners.close();
     }
 
-//    public Bitmap cropResult() {
-//        if (cropRectangle.left < cropRectangle.right && cropRectangle.top < cropRectangle.bottom) {
-//            return Bitmap.createBitmap((int) (cropRectangle.right - cropRectangle.left),
-//                                       (int) (cropRectangle.bottom - cropRectangle.top), Bitmap.Config.ARGB_8888);
-//        }
-//        return null;
-//    }
-
+    public Bitmap cropResult() {
+        if (cropRectangle.left < cropRectangle.right && cropRectangle.top < cropRectangle.bottom) {
+            return Bitmap.createBitmap(
+                    MainObjects.getBitmap(), (int) (width / 2), (int) (height / 2),
+                    (int) (cropRectangle.right - cropRectangle.left),
+                    (int) (cropRectangle.bottom - cropRectangle.top),
+                    CropObjects.getResultMatrix(), true);
+        }
+        return null;
+    }
 }

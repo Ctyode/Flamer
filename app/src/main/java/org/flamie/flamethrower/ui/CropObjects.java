@@ -10,6 +10,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import org.flamie.flamethrower.R;
+import org.flamie.flamethrower.TouchImageView;
 import org.flamie.flamethrower.ui.objects.CropBottomPanel;
 import org.flamie.flamethrower.ui.objects.CropRectangle;
 import org.flamie.flamethrower.ui.objects.buttons.ButtonRotate;
@@ -19,7 +20,8 @@ import static org.flamie.flamethrower.util.DimenUtils.dp;
 public class CropObjects extends RelativeLayout {
 
     private Activity activity;
-    private ImageView photoPreview;
+    private TouchImageView photoPreview;
+    private static Matrix photoResultMatrix;
 
     public CropObjects(Context context, Activity activity) {
         super(context);
@@ -31,29 +33,38 @@ public class CropObjects extends RelativeLayout {
         this.setBackgroundColor(Color.BLACK);
         final Context context = activity.getApplication().getApplicationContext();
 
-        photoPreview = new ImageView(context);
+        photoPreview = new TouchImageView(context);
         photoPreview.setScaleType(ImageView.ScaleType.MATRIX);
         CropBottomPanel cropBottomPanel = new CropBottomPanel(context);
-        TextView cancelText = new TextView(context);
+        final TextView cancelText = new TextView(context);
+        final TextView resultCancelText = new TextView(context);
         TextView resetText = new TextView(context);
         TextView doneText = new TextView(context);
-        ButtonRotate buttonRotate = new ButtonRotate(context);
+        final ButtonRotate buttonRotate = new ButtonRotate(context);
         final CropRectangle cropRectangle = new CropRectangle(context);
-        final Matrix matrix = new Matrix();
-//        final ImageView photoResult = new ImageView(context);
-//        photoResult.setBackgroundColor(Color.BLACK);
-//        photoResult.setVisibility(INVISIBLE);
+        photoResultMatrix = new Matrix();
+        final ImageView photoResult = new ImageView(context);
+        final CropBottomPanel resultBottomPanel = new CropBottomPanel(context);
+        final TextView saveText = new TextView(context);
+        photoResult.setBackgroundColor(Color.BLACK);
+        photoResult.setVisibility(INVISIBLE);
+        resultBottomPanel.setVisibility(INVISIBLE);
+        saveText.setVisibility(INVISIBLE);
+        resultCancelText.setVisibility(INVISIBLE);
 
         photoPreview.setImageBitmap(MainObjects.getBitmap());
 
         cancelText.setText(R.string.cancel_text);
+        resultCancelText.setText(R.string.cancel_text);
         resetText.setText(R.string.reset_text);
         doneText.setText(R.string.done_text);
+        saveText.setText(R.string.save_text);
 
         final LayoutParams photoPreviewParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
         LayoutParams cancelTextParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         LayoutParams resetTextParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         LayoutParams doneTextParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        LayoutParams saveTextParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         LayoutParams buttonRotateParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
 
         photoPreviewParams.addRule(ALIGN_PARENT_TOP);
@@ -75,9 +86,15 @@ public class CropObjects extends RelativeLayout {
         doneTextParams.bottomMargin = dp(15);
         doneTextParams.rightMargin = dp(15);
 
+        saveTextParams.addRule(ALIGN_PARENT_BOTTOM);
+        saveTextParams.addRule(ALIGN_PARENT_RIGHT);
+        saveTextParams.bottomMargin = dp(15);
+        saveTextParams.rightMargin = dp(15);
+
         cancelText.setTextColor(Color.WHITE);
         resetText.setTextColor(Color.WHITE);
         doneText.setTextColor(Color.CYAN);
+        saveText.setTextColor(Color.CYAN);
 
         buttonRotateParams.addRule(ALIGN_PARENT_BOTTOM);
         buttonRotateParams.addRule(ALIGN_PARENT_RIGHT);
@@ -87,9 +104,9 @@ public class CropObjects extends RelativeLayout {
         buttonRotate.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                matrix.postRotate((float) -90, photoPreview.getDrawable().getBounds().width() / 2,
-                                               photoPreview.getDrawable().getBounds().height() / 2);
-                photoPreview.setImageMatrix(matrix);
+                photoResultMatrix.postRotate((float) -90, photoPreview.getDrawable().getBounds().width() / 2,
+                                                          photoPreview.getDrawable().getBounds().height() / 2);
+                photoPreview.setImageMatrix(photoResultMatrix);
                 photoPreview.invalidate();
             }
         });
@@ -101,19 +118,26 @@ public class CropObjects extends RelativeLayout {
             }
         });
 
-//        doneText.setOnClickListener(new OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                photoResult.setImageBitmap(cropRectangle.cropResult());
-//                photoResult.setVisibility(VISIBLE);
-//            }
-//        });
+        doneText.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                photoResult.setImageBitmap(cropRectangle.cropResult());
+                photoResult.setLayoutParams(photoPreviewParams);
+                photoResult.setVisibility(VISIBLE);
+                resultBottomPanel.setVisibility(VISIBLE);
+                saveText.setVisibility(VISIBLE);
+                buttonRotate.setVisibility(INVISIBLE);
+                resultCancelText.setVisibility(VISIBLE);
+            }
+        });
 
         photoPreview.setLayoutParams(photoPreviewParams);
         cancelText.setLayoutParams(cancelTextParams);
         resetText.setLayoutParams(resetTextParams);
         doneText.setLayoutParams(doneTextParams);
+        saveText.setLayoutParams(saveTextParams);
         buttonRotate.setLayoutParams(buttonRotateParams);
+        resultCancelText.setLayoutParams(cancelTextParams);
 
         addView(photoPreview);
         addView(cropRectangle);
@@ -122,8 +146,13 @@ public class CropObjects extends RelativeLayout {
         addView(resetText);
         addView(doneText);
         addView(buttonRotate);
-//        addView(photoResult);
+        addView(photoResult);
+        addView(resultBottomPanel);
+        addView(resultCancelText);
+        addView(saveText);
     }
 
-
+    public static Matrix getResultMatrix() {
+        return photoResultMatrix;
+    }
 }
