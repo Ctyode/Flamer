@@ -224,6 +224,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
                 blocked = true;
                 if(videoMode) {
                     if(isRecording) {
+                        flashMode();
                         cameraController.requireStopRecord();
                         cameraController.getMediaRecorder().setPreviewDisplay(null);
                         cameraController.getCamera().stopPreview();
@@ -239,6 +240,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
                         buttonDecline.show();
                         isRecording = false;
                     } else {
+                        flashMode();
                         cameraController.setOrientationHint(calculateRotation());
                         cameraController.requireStartRecord();
 
@@ -247,21 +249,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
                         isRecording = true;
                     }
                 } else {
-                    if(cameraController.getCameraId() == Camera.CameraInfo.CAMERA_FACING_BACK) {
-                        if (flashModeOff) {
-                            Camera.Parameters parameters = cameraController.getCamera().getParameters();
-                            parameters.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
-                            cameraController.getCamera().setParameters(parameters);
-                        } else if (flashModeOn) {
-                            Camera.Parameters parameters = cameraController.getCamera().getParameters();
-                            parameters.setFlashMode(Camera.Parameters.FLASH_MODE_ON);
-                            cameraController.getCamera().setParameters(parameters);
-                        } else if (flashModeAuto) {
-                            Camera.Parameters parameters = cameraController.getCamera().getParameters();
-                            parameters.setFlashMode(Camera.Parameters.FLASH_MODE_AUTO);
-                            cameraController.getCamera().setParameters(parameters);
-                        }
-                    }
+                    flashMode();
                     if(safeToTakePicture) {
                         cameraController.requireCameraPicture();
                         safeToTakePicture = false;
@@ -535,6 +523,42 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
         buttonCapture.getSpringRectangleRecord().setEndValue(40f);
         bottomPanel.getSpringPositionY().setEndValue(dp(115));
         isRecording = true;
+    }
+
+    public void flashMode() {
+        if(cameraController.getCameraId() == Camera.CameraInfo.CAMERA_FACING_BACK) {
+            if(!videoMode) {
+                if (flashModeOff) {
+                    Camera.Parameters parameters = cameraController.getCamera().getParameters();
+                    parameters.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
+                    cameraController.getCamera().setParameters(parameters);
+                } else if (flashModeOn) {
+                    Camera.Parameters parameters = cameraController.getCamera().getParameters();
+                    parameters.setFlashMode(Camera.Parameters.FLASH_MODE_ON);
+                    cameraController.getCamera().setParameters(parameters);
+                } else if (flashModeAuto) {
+                    Camera.Parameters parameters = cameraController.getCamera().getParameters();
+                    parameters.setFlashMode(Camera.Parameters.FLASH_MODE_AUTO);
+                    cameraController.getCamera().setParameters(parameters);
+                }
+            } else {
+                if(!isRecording) {
+                    if (flashModeOff || flashModeAuto) {
+                        Camera.Parameters parameters = cameraController.getCamera().getParameters();
+                        parameters.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
+                        cameraController.getCamera().setParameters(parameters);
+                    } else if (flashModeOn) {
+                        Camera.Parameters parameters = cameraController.getCamera().getParameters();
+                        parameters.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
+                        cameraController.getCamera().setParameters(parameters);
+                    }
+                } else {
+                    Camera.Parameters parameters = cameraController.getCamera().getParameters();
+                    parameters.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
+                    cameraController.getCamera().setParameters(parameters);
+                }
+            }
+        }
     }
 
     public static Bitmap getBitmap() {
