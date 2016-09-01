@@ -221,7 +221,7 @@ public class CameraController extends Thread implements Camera.PictureCallback, 
         mCamera.unlock();
 
         for(AfterUnlockCallback callback : afterUnlockCallbacks) {
-            callback.afterUnlock(mCamera);
+                callback.afterUnlock(mCamera);
         }
     }
 

@@ -54,7 +54,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
     private ImageView photoPreview;
     private ButtonAccept buttonAccept;
     private ButtonDecline buttonDecline;
-    private boolean isRecording = false;
+    public static boolean isRecording = false;
     public static boolean videoMode = false;
     private boolean isFront = false;
     private boolean isPlaying = false;
@@ -106,6 +106,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
             @Override
             public void run() {
                 longTap();
+                buttonCapture.isLongPressed = true;
             }
         });
         buttonChange = new ButtonChange(context);
@@ -285,6 +286,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
                     videoView.setVisibility(INVISIBLE);
                     buttonCapture.setVisibility(VISIBLE);
                     buttonChange.setVisibility(VISIBLE);
+                    buttonCapture.afterLongTap();
                 } else {
                     ImageSaveUtils.saveImage(data);
                     bitmap.recycle();
@@ -307,6 +309,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
             public void onClick(View v) {
                 // NJET
                 if(videoMode) {
+                    buttonCapture.afterLongTap();
                     buttonPlay.setVisibility(INVISIBLE);
                     videoView.setVisibility(INVISIBLE);
                     buttonCapture.setVisibility(VISIBLE);
@@ -334,6 +337,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
                     bottomPanel.getSpringOpacity().setEndValue(110);
                     buttonCapture.transformToVideo();
                     videoMode = true;
+                    buttonCapture.isLongPressed = false;
                 }
             }
 
@@ -342,6 +346,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
                     bottomPanel.getSpringOpacity().setEndValue(255);
                     buttonCapture.transformToPhoto();
                     videoMode = false;
+                    buttonCapture.isLongPressed = false;
                 }
             }
         });
@@ -374,7 +379,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
 //                seekBar.postDelayed(onEverySecond, 1000);
 //            }
 //        });
-//
+
 //        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 //
 //            @Override
@@ -424,7 +429,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
         addView(cropButton);
 //        addView(seekBar);
     }
-//
+
 //    private Runnable onEverySecond = new Runnable() {
 //        @Override
 //        public void run() {
@@ -513,16 +518,13 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
     }
 
     public void longTap() {
+        isRecording = true;
+        videoMode = true;
         cameraController.setOrientationHint(calculateRotation());
         cameraController.requireStartRecord();
 
-//        buttonCapture.transformFromPhotoToStop();
-        buttonCapture.getSpringOuterX().setEndValue(0);
-        buttonCapture.getSpringOuterY().setEndValue(0);
-        buttonCapture.getSpringBigRecord().setEndValue(dp(35));
-        buttonCapture.getSpringRectangleRecord().setEndValue(40f);
+        buttonCapture.transformFromPhotoToStop();
         bottomPanel.getSpringPositionY().setEndValue(dp(115));
-        isRecording = true;
     }
 
     public void flashMode() {

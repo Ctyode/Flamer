@@ -53,6 +53,7 @@ public class ButtonCapture extends View implements SpringListener {
     private Spring mSpringRectangleRecord;
 
     private Runnable mLongPressed;
+    public boolean isLongPressed = false;
 
     public ButtonCapture(Context context) {
         super(context);
@@ -107,17 +108,17 @@ public class ButtonCapture extends View implements SpringListener {
         innerCirclePaint = new Paint();
         innerCirclePaint.setAntiAlias(true);
         innerCirclePaint.setStyle(Paint.Style.FILL);
-        innerCirclePaint.setColor(Color.rgb(61, 150, 227));
+        innerCirclePaint.setColor(Color.rgb(0, 124, 219));
 
         centralCirclePaint = new Paint();
         centralCirclePaint.setAntiAlias(true);
         centralCirclePaint.setStyle(Paint.Style.FILL);
-        centralCirclePaint.setColor(Color.rgb(80, 168, 245));
+        centralCirclePaint.setColor(Color.rgb(0, 150, 250));
 
         recordCirclePaint = new Paint();
         recordCirclePaint.setAntiAlias(true);
         recordCirclePaint.setStyle(Paint.Style.FILL);
-        recordCirclePaint.setColor(Color.RED);
+        recordCirclePaint.setColor(Color.rgb(150, 31, 57));
 
         mSpringOuterX.setSpringConfig(new SpringConfig(100, 18));
         mSpringOuterY.setSpringConfig(new SpringConfig(100, 18));
@@ -177,7 +178,11 @@ public class ButtonCapture extends View implements SpringListener {
     }
 
     public void transformToVideo() {
-        mSpringOuterX.setEndValue(dp(45));
+//        if(!isLongPressed) {
+            mSpringOuterX.setEndValue(dp(45));
+//        } else {
+//            mSpringOuterX.setEndValue(dp(35));
+//        }
         mSpringInner.setEndValue(0);
         mSpringCentral.setEndValue(0);
         mSpringSmallRecord.setEndValue(dp(7));
@@ -204,22 +209,26 @@ public class ButtonCapture extends View implements SpringListener {
         mSpringRectangleRecord.setEndValue(0);
     }
 
-//    public void transformFromPhotoToStop() {
-//        mSpringOuterX.setEndValue(0);
-//        mSpringOuterY.setEndValue(0);
-//        mSpringCentral.setEndValue(0);
-//        mSpringInner.setEndValue(0);
-//        mSpringBigRecord.setEndValue(dp(35));
-//        mSpringRectangleRecord.setEndValue(40f);
-//    }
-//
-//    private void transformFromStopToPhoto() {
-//        mSpringOuterX.setEndValue(dp(35));
-//        mSpringInner.setEndValue(dp(30));
-//        mSpringCentral.setEndValue(0);
-//        mSpringBigRecord.setEndValue(0);
-//        mSpringRectangleRecord.setEndValue(0);
-//    }
+    public void transformFromPhotoToStop() {
+        if(!isLongPressed) {
+            mSpringOuterX.setEndValue(0);
+            mSpringOuterY.setEndValue(0);
+            mSpringInner.setEndValue(0);
+            mSpringCentral.setEndValue(0);
+            mSpringBigRecord.setEndValue(dp(35));
+            mSpringRectangleRecord.setEndValue(40f);
+        }
+    }
+
+    public void afterLongTap() {
+        if(isLongPressed) {
+            mSpringOuterX.setCurrentValue(dp(35));
+            mSpringInner.setCurrentValue(dp(30));
+            mSpringCentral.setCurrentValue(dp(20));
+            MainObjects.videoMode = false;
+            isLongPressed = false;
+        }
+    }
 
     @Override
     public void onSpringAtRest(Spring spring) {}
@@ -242,29 +251,16 @@ public class ButtonCapture extends View implements SpringListener {
     public final Handler handler = new Handler();
 
     @Override
-    public boolean onTouchEvent(MotionEvent event){
-        if(event.getAction() == MotionEvent.ACTION_DOWN)
-            handler.postDelayed(mLongPressed, 1000);
-        if((event.getAction() == MotionEvent.ACTION_MOVE)||(event.getAction() == MotionEvent.ACTION_UP))
-            handler.removeCallbacks(mLongPressed);
-//            transformFromStopToPhoto();
+    public boolean onTouchEvent(MotionEvent event) {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                if(!MainObjects.videoMode && !isLongPressed) {
+                    handler.postDelayed(mLongPressed, 500);
+                }
+            }
+            if ((event.getAction() == MotionEvent.ACTION_UP)) {
+                handler.removeCallbacks(mLongPressed);
+        }
         return super.onTouchEvent(event);
-    }
-
-    public Spring getSpringOuterX() {
-        return mSpringOuterX;
-    }
-
-    public Spring getSpringOuterY() {
-        return mSpringOuterY;
-    }
-
-    public Spring getSpringBigRecord() {
-        return mSpringBigRecord;
-    }
-
-    public Spring getSpringRectangleRecord() {
-        return mSpringRectangleRecord;
     }
 
 }
