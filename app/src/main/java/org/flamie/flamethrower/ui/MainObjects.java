@@ -10,6 +10,7 @@ import android.graphics.Matrix;
 import android.hardware.Camera;
 import android.media.MediaPlayer;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.VideoView;
@@ -19,6 +20,7 @@ import org.flamie.flamethrower.OnSwipeTouchListener;
 import org.flamie.flamethrower.VideoFileCallback;
 import org.flamie.flamethrower.activities.CropActivity;
 import org.flamie.flamethrower.ui.objects.BottomPanel;
+import org.flamie.flamethrower.ui.objects.Circles;
 import org.flamie.flamethrower.ui.objects.buttons.ButtonAccept;
 import org.flamie.flamethrower.ui.objects.buttons.ButtonCapture;
 import org.flamie.flamethrower.ui.objects.buttons.ButtonChange;
@@ -72,6 +74,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
     public static boolean safeToTakePicture = false;
     private ButtonCapture buttonCapture;
     private BottomPanel bottomPanel;
+    private Circles circles;
 
     public MainObjects(Context context, Activity activity, CameraController cameraController, CameraPreview cameraPreview) {
         super(context);
@@ -99,6 +102,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
         videoView = new VideoView(activity);
         videoView.setZOrderMediaOverlay(true);
         cropButton = new CropButton(context);
+        circles = new Circles(context);
 
         bottomPanel = new BottomPanel(context);
         buttonCapture = new ButtonCapture(context);
@@ -130,6 +134,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
         LayoutParams previewParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
         LayoutParams playButtonParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         LayoutParams cropButtonParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        LayoutParams circlesParams = new LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 //        LayoutParams seekBarParams = new LayoutParams(LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 //        seekBar.setThumb(null);
 
@@ -179,6 +184,10 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
         cropButtonParams.addRule(ALIGN_PARENT_BOTTOM);
         cropButtonParams.addRule(CENTER_HORIZONTAL);
         cropButtonParams.bottomMargin = dp(30);
+
+        circlesParams.addRule(ALIGN_PARENT_BOTTOM);
+        circlesParams.addRule(CENTER_HORIZONTAL);
+        circlesParams.bottomMargin = dp(50);
 
         flashButtonOn.hide();
         flashButtonOff.hide();
@@ -409,6 +418,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
         buttonPlay.setLayoutParams(playButtonParams);
         videoView.setLayoutParams(photoPreviewParams);
         cropButton.setLayoutParams(cropButtonParams);
+        circles.setLayoutParams(circlesParams);
 //        seekBar.setLayoutParams(seekBarParams);
         setLayoutParams(previewParams);
 
@@ -427,6 +437,7 @@ public class MainObjects extends RelativeLayout implements Camera.PictureCallbac
         addView(buttonDecline);
         addView(buttonPlay);
         addView(cropButton);
+        addView(circles);
 //        addView(seekBar);
     }
 

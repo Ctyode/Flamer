@@ -10,17 +10,18 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import org.flamie.flamethrower.R;
-import org.flamie.flamethrower.TouchImageView;
 import org.flamie.flamethrower.ui.objects.CropBottomPanel;
 import org.flamie.flamethrower.ui.objects.CropRectangle;
 import org.flamie.flamethrower.ui.objects.buttons.ButtonRotate;
+
+import uk.co.senab.photoview.PhotoView;
 
 import static org.flamie.flamethrower.util.DimenUtils.dp;
 
 public class CropObjects extends RelativeLayout {
 
     private Activity activity;
-    private TouchImageView photoPreview;
+    private PhotoView photoPreview;
     private static Matrix photoResultMatrix;
 
     public CropObjects(Context context, Activity activity) {
@@ -33,8 +34,8 @@ public class CropObjects extends RelativeLayout {
         this.setBackgroundColor(Color.BLACK);
         final Context context = activity.getApplication().getApplicationContext();
 
-        photoPreview = new TouchImageView(context);
-        photoPreview.setScaleType(ImageView.ScaleType.MATRIX);
+        photoPreview = new PhotoView(context);
+//        photoPreview.setScaleType(ImageView.ScaleType.MATRIX);
         CropBottomPanel cropBottomPanel = new CropBottomPanel(context);
         final TextView cancelText = new TextView(context);
         final TextView resultCancelText = new TextView(context);
